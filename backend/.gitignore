@@ -1,0 +1,35 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.so
+
+# Poetry virtual environment (if inside project)
+.venv
+
+# Environment variables
+.env
+.env.*
+
+# VSCode and editor config
+.vscode/
+*.code-workspace
+
+# macOS and system files
+.DS_Store
+Thumbs.db
+
+# Testing
+htmlcov/
+.coverage
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+
+# mypy / pylint
+.mypy_cache/
+.dmypy.json
+.pyre/
+
+# Logs
+*.log
