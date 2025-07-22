@@ -6,9 +6,9 @@ __pycache__/
 # Poetry virtual environment (if inside project)
 .venv
 
-# Environment variables
-.env
-.env.*
+# env files
+.env*
+!.env.example
 
 # VSCode and editor config
 .vscode/
