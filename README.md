@@ -40,6 +40,20 @@ Upload a property listing or paste its text — get intelligent insights, flags,
 
 ---
 
+## 🧹 Code Quality
+
+**Backend**
+
+- Linting & Formatting: [Ruff](https://docs.astral.sh/ruff) (includes Black)
+- Pre-commit hooks: Enforced via pre-commit (`pre-commit run --all-files`)
+
+**Frontend**
+
+- Formatting: [Prettier](https://prettier.io)
+- Pre-commit hooks: Managed by [Husky](https://typicode.github.io/husky)
+
+---
+
 ## 🚀 Getting Started
 
 ```bash
@@ -76,5 +90,3 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for more details.
 ## 📄 License
 
 MIT License. See [LICENSE](LICENSE) for more information.
-
-
