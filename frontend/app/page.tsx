@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export default function Home() {
   return (
@@ -7,5 +7,5 @@ export default function Home() {
       <Input placeholder="Enter something..." />
       <Button>Test Button</Button>
     </main>
-  )
+  );
 }
