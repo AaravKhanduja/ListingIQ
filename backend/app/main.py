@@ -1,9 +1,12 @@
-# save as main.py
 from fastapi import FastAPI
+from app.routers import analyze
+import os
+from dotenv import load_dotenv
+import openai
+
+load_dotenv()
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app = FastAPI()
 
-
-@app.get("/")
-def read_root():
-    return {"Test": "App"}
+app.include_router(analyze.router, prefix="/api")
