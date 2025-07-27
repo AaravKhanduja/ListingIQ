@@ -16,11 +16,10 @@ export default function HomePage() {
 
   const handleAnalyze = async () => {
     if (!propertyInput.trim()) return;
-    
+  
     setIsAnalyzing(true);
     setAnalysisProgress(0);
-    
-    // Simulate realistic analysis progress
+  
     const progressSteps = [
       { progress: 15, message: "Fetching property data..." },
       { progress: 35, message: "Analyzing listing details..." },
@@ -28,15 +27,20 @@ export default function HomePage() {
       { progress: 85, message: "Generating insights..." },
       { progress: 100, message: "Analysis complete!" }
     ];
-    
+  
     for (let i = 0; i < progressSteps.length; i++) {
       await new Promise(resolve => setTimeout(resolve, 800));
       setAnalysisProgress(progressSteps[i].progress);
     }
-    
-    // Store the property input for the results page
-    localStorage.setItem('currentProperty', propertyInput);
-    router.push('/analysis');
+  
+    // Generate a unique ID
+    const listingId = Date.now().toString(); // or use nanoid() for better IDs
+  
+    // Save input to localStorage
+    localStorage.setItem(`listing-${listingId}`, propertyInput);
+  
+    // Navigate to listing/[id]
+    router.push(`/listing/${listingId}`);
   };
 
   if (isAnalyzing) {
