@@ -26,22 +26,30 @@ async def analyze(request: AnalyzeRequest):
             "error": "No listing found for that location. Please try another address or paste the full description manually."
         }
 
-    # Construct GPT-friendly description
-    desc = f"""
-    Address: {listing.get("address")}
-    Price: {listing.get("price")}
-    Bedrooms: {listing.get("beds")}
-    Bathrooms: {listing.get("baths")}
-    Lot Area: {listing.get("lotArea")}
-    Type: {listing.get("statusText")}
-    Description: {listing.get("description")}
-    """
+    zillow_location = listing.get("address", "Unknown location")
+    short_desc = listing.get("description", "No description available.")
 
+    # Prompt for GPT-4
     prompt = (
-        f"Analyze the following real estate listing:\n\n{desc}\n\n"
-        "Give exactly 3 strengths, 3 weaknesses, 3 hidden issues, and 3 follow-up questions a buyer should ask.\n"
-        "Respond in valid JSON with double quotes using this schema:\n"
-        '{ "strengths": ["", "", ""], "weaknesses": ["", "", ""], "hidden_issues": ["", "", ""], "follow_ups": ["", "", ""] }'
+        f"You are a helpful assistant analyzing real estate listings.\n\n"
+        f"Listing Address: {zillow_location}\n"
+        f"Description: {short_desc}\n\n"
+        "Based on this information, return:\n"
+        "- A 2-sentence summary\n"
+        "- A score from 0 to 100 for investment potential\n"
+        "- 3 strengths\n"
+        "- 3 weaknesses\n"
+        "- 3 hidden issues\n"
+        "- 3 follow-up questions\n\n"
+        "Respond in valid JSON format:\n"
+        "{\n"
+        '  "summary": "",\n'
+        '  "score": 0,\n'
+        '  "strengths": ["", "", ""],\n'
+        '  "weaknesses": ["", "", ""],\n'
+        '  "hidden_issues": ["", "", ""],\n'
+        '  "follow_ups": ["", "", ""]\n'
+        "}"
     )
 
     try:
@@ -59,7 +67,12 @@ async def analyze(request: AnalyzeRequest):
 
         content = response.choices[0].message.content.strip()
         parsed = json.loads(content)
-        return parsed
+
+        return {
+            "location": zillow_location,
+            "short_description": short_desc,
+            **parsed,  # includes summary, score, strengths, etc.
+        }
 
     except Exception as e:
         return {"error": str(e)}
