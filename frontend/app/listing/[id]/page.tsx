@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Shield, AlertTriangle, Search, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { LoadingState } from '@/components/listing/LoadingState';
+import { analyzeListing, AnalyzeRequest } from '@/lib/analyze';
 
 interface ListingData {
   propertyTitle: string;
@@ -19,6 +20,7 @@ interface ListingData {
   weaknesses: string[];
   hiddenIssues: string[];
   questions: string[];
+  inputType: 'location' | 'text';
 }
 
 export default function ListingPage() {
@@ -26,29 +28,33 @@ export default function ListingPage() {
   const [listingData, setListingData] = useState<ListingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   const params = useParams();
   const id = params.id as string;
 
   useEffect(() => {
     const storedProperty = localStorage.getItem('currentProperty');
+    const inputMode = localStorage.getItem('inputMode') || 'location';
 
     if (storedProperty) {
       setPropertyInput(storedProperty);
       setLoading(true);
 
-      fetch('http://localhost:8000/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ location: storedProperty }),
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.error) {
-            console.error('API error:', data.error);
-            return;
-          }
+      // Prepare the analysis request based on input type
+      const analyzeRequest: AnalyzeRequest = {
+        input_type: inputMode as 'location' | 'text',
+      };
 
+      if (inputMode === 'text') {
+        analyzeRequest.listing_text = storedProperty;
+      } else {
+        analyzeRequest.location = storedProperty;
+      }
+
+      // Start the analysis
+      analyzeListing(analyzeRequest)
+        .then((data) => {
           const newAnalysis: ListingData = {
             propertyTitle: data.location || 'Unknown',
             summary: data.summary || '',
@@ -57,8 +63,10 @@ export default function ListingPage() {
             weaknesses: data.weaknesses || [],
             hiddenIssues: data.hidden_issues || [],
             questions: data.follow_ups || [],
+            inputType: data.input_type || 'location',
           };
 
+          // Simulate progress for better UX
           let progress = 0;
           const interval = setInterval(() => {
             progress += Math.floor(Math.random() * 10) + 5;
@@ -67,12 +75,14 @@ export default function ListingPage() {
               setListingData(newAnalysis);
               setLoading(false);
 
+              // Save to localStorage for history
               const savedAnalyses = JSON.parse(localStorage.getItem('savedAnalyses') || '[]');
               savedAnalyses.push({
                 id: Date.now(),
                 date: new Date().toISOString(),
                 title: newAnalysis.propertyTitle,
                 propertyInput: storedProperty,
+                inputType: inputMode,
                 analysis: {
                   overallScore: newAnalysis.overallScore,
                   strengths: newAnalysis.strengths,
@@ -87,15 +97,50 @@ export default function ListingPage() {
             }
           }, 200);
         })
-        .catch(err => {
-          console.error('Request failed:', err);
+        .catch((err) => {
+          console.error('Analysis failed:', err);
+          setError(err.message);
           setLoading(false);
         });
+    } else {
+      setError('No property data found. Please go back and try again.');
+      setLoading(false);
     }
   }, []);
 
-  if (loading || !listingData) {
+  if (loading) {
     return <LoadingState analysisProgress={analysisProgress} />;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+        <Navigation />
+        <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="mb-6">
+            <Link href="/">
+              <Button variant="outline" className="mb-4">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Search
+              </Button>
+            </Link>
+          </div>
+
+          <div className="text-center py-12">
+            <AlertTriangle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Analysis Failed</h2>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <Link href="/">
+              <Button className="bg-blue-600 hover:bg-blue-700">Try Again</Button>
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!listingData) {
+    return null;
   }
 
   return (
@@ -111,6 +156,19 @@ export default function ListingPage() {
               Back to Search
             </Button>
           </Link>
+        </div>
+
+        {/* Input Type Badge */}
+        <div className="mb-4">
+          <span
+            className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+              listingData.inputType === 'text'
+                ? 'bg-purple-100 text-purple-800'
+                : 'bg-blue-100 text-blue-800'
+            }`}
+          >
+            {listingData.inputType === 'text' ? '📄 Text Analysis' : '🌐 API Search'}
+          </span>
         </div>
 
         {/* Property Header */}
