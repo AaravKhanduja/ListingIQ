@@ -134,11 +134,7 @@ export function ListingInputForm({
                 disabled={isAnalyzing}
               />
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
-            </div>
-            <p className="text-sm text-slate-500 flex items-center">
-              <HelpCircle className="h-4 w-4 mr-1" />
-              We'll search Zillow, Redfin, and MLS databases
-            </p>
+            </div> 
           </div>
         )}
 
