@@ -65,8 +65,15 @@ export async function analyzeByText(listingText: string): Promise<AnalyzeRespons
   return analyzeByAddress(listingText);
 }
 
-export async function analyzeAuto(request: any): Promise<AnalyzeResponse> {
-  const address = request.location || request.listing_text || request.property_address;
+interface LegacyRequest {
+  location?: string;
+  listing_text?: string;
+  property_address?: string;
+  property_title?: string;
+}
+
+export async function analyzeAuto(request: LegacyRequest): Promise<AnalyzeResponse> {
+  const address = request.location || request.listing_text || request.property_address || '';
   const title = request.property_title || address;
   return analyzeByAddress(address, title);
 }
