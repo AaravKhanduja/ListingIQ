@@ -43,27 +43,29 @@ export default function ListingPage() {
 
       // Prepare the analysis request based on input type
       const analyzeRequest: AnalyzeRequest = {
-        input_type: inputMode as 'location' | 'text',
+        property_address: storedProperty,
+        property_title: storedProperty,
       };
 
-      if (inputMode === 'text') {
-        analyzeRequest.listing_text = storedProperty;
-      } else {
-        analyzeRequest.location = storedProperty;
-      }
-
       // Start the analysis
+      console.log('🔍 Making API call with:', analyzeRequest);
       analyzeListing(analyzeRequest)
         .then((data) => {
+          console.log('✅ API response received:', data);
+          if (!data.success || !data.analysis) {
+            throw new Error(data.error || 'Analysis failed');
+          }
+
+          const analysis = data.analysis;
           const newAnalysis: ListingData = {
-            propertyTitle: data.location || 'Unknown',
-            summary: data.summary || '',
-            overallScore: data.score || 0,
-            strengths: data.strengths || [],
-            weaknesses: data.weaknesses || [],
-            hiddenIssues: data.hidden_issues || [],
-            questions: data.follow_ups || [],
-            inputType: data.input_type || 'location',
+            propertyTitle: analysis.property_title || 'Unknown',
+            summary: analysis.summary || '',
+            overallScore: analysis.overall_score || 0,
+            strengths: analysis.strengths || [],
+            weaknesses: analysis.weaknesses || [],
+            hiddenIssues: analysis.hidden_issues || [],
+            questions: analysis.questions || [],
+            inputType: inputMode as 'location' | 'text',
           };
 
           // Simulate progress for better UX
