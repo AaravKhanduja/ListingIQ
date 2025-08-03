@@ -10,6 +10,7 @@ import {
   AnalysisCard,
   AddNewButton,
   LoadingState,
+  BackButton,
   formatDate,
   getScoreColor,
   getTimeAgo,
@@ -82,6 +83,7 @@ export default function SavedAnalysesPage() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
         <Navigation />
         <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <BackButton />
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-black mb-2">Saved Listings</h1>
             <p className="text-slate-600">Your analyzed properties and insights</p>
@@ -97,6 +99,9 @@ export default function SavedAnalysesPage() {
       <Navigation />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Back Button */}
+        <BackButton />
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-black mb-2">Saved Listings</h1>

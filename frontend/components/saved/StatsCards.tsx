@@ -12,11 +12,11 @@ export function StatsCards({ totalCount, thisWeekCount }: StatsCardsProps) {
   return (
     <div className="grid grid-cols-2 gap-6 mb-8">
       <Card className="border-0 shadow-lg">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-1">
           <div className="flex items-center justify-between">
             <p className="text-sm text-slate-600 font-normal">Total listings</p>
-            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-              <Archive className="h-6 w-6 text-blue-600" />
+            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Archive className="h-4 w-4 text-blue-600" />
             </div>
           </div>
         </CardHeader>
@@ -26,11 +26,11 @@ export function StatsCards({ totalCount, thisWeekCount }: StatsCardsProps) {
       </Card>
 
       <Card className="border-0 shadow-lg">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-1">
           <div className="flex items-center justify-between">
             <p className="text-sm text-slate-600 font-normal">This week</p>
-            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-              <TrendingUp className="h-6 w-6 text-green-600" />
+            <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+              <TrendingUp className="h-4 w-4 text-green-600" />
             </div>
           </div>
         </CardHeader>
