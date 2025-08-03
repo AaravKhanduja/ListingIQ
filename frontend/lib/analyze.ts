@@ -1,33 +1,28 @@
 // lib/analyze.ts
 
 export interface AnalyzeRequest {
-  location?: string;
-  listing_text?: string;
-  input_type?: 'location' | 'text' | 'auto';
+  property_address: string;
+  property_title?: string;
 }
 
-export interface PropertyDetails {
-  price?: number;
-  bedrooms?: number;
-  bathrooms?: number;
-  square_feet?: number;
-  property_type?: string;
-  year_built?: number;
-}
-
-export interface AnalyzeResponse {
-  location: string;
-  short_description: string;
-  input_type: 'location' | 'text';
+export interface PropertyAnalysis {
+  id?: string;
+  property_address: string;
+  property_title: string;
+  overall_score: number;
   summary: string;
-  score: number;
   strengths: string[];
   weaknesses: string[];
   hidden_issues: string[];
-  follow_ups: string[];
-  property_details?: PropertyDetails;
+  questions: string[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface AnalyzeResponse {
+  success: boolean;
+  analysis?: PropertyAnalysis;
   error?: string;
-  suggestion?: string;
 }
 
 export async function analyzeListing(request: AnalyzeRequest): Promise<AnalyzeResponse> {
@@ -40,7 +35,8 @@ export async function analyzeListing(request: AnalyzeRequest): Promise<AnalyzeRe
   });
 
   if (!response.ok) {
-    throw new Error(`API Error: ${response.statusText}`);
+    const errorText = await response.text();
+    throw new Error(`API Error: ${response.statusText} - ${errorText}`);
   }
 
   const data = await response.json();
@@ -53,14 +49,24 @@ export async function analyzeListing(request: AnalyzeRequest): Promise<AnalyzeRe
 }
 
 // Convenience functions for different input types
+export async function analyzeByAddress(address: string, title?: string): Promise<AnalyzeResponse> {
+  return analyzeListing({ 
+    property_address: address, 
+    property_title: title || address 
+  });
+}
+
+// Legacy functions for backward compatibility
 export async function analyzeByLocation(location: string): Promise<AnalyzeResponse> {
-  return analyzeListing({ location, input_type: 'location' });
+  return analyzeByAddress(location);
 }
 
 export async function analyzeByText(listingText: string): Promise<AnalyzeResponse> {
-  return analyzeListing({ listing_text: listingText, input_type: 'text' });
+  return analyzeByAddress(listingText);
 }
 
-export async function analyzeAuto(request: AnalyzeRequest): Promise<AnalyzeResponse> {
-  return analyzeListing({ ...request, input_type: 'auto' });
+export async function analyzeAuto(request: any): Promise<AnalyzeResponse> {
+  const address = request.location || request.listing_text || request.property_address;
+  const title = request.property_title || address;
+  return analyzeByAddress(address, title);
 }
