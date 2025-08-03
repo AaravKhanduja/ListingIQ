@@ -26,6 +26,37 @@ API_HEADERS = {
 TIMEOUT = 30.0
 
 
+class ZillowService:
+    """Service class for Zillow API operations"""
+
+    def __init__(self):
+        self.api_key = RAPIDAPI_KEY
+        self.api_host = RAPIDAPI_HOST
+        self.headers = API_HEADERS
+        self.timeout = TIMEOUT
+
+    async def get_property_data(self, address: str) -> Dict[str, Any]:
+        """
+        Get property data for a given address.
+
+        Args:
+            address: Property address
+
+        Returns:
+            Dictionary containing property information
+        """
+        # For now, return mock data since we don't have RapidAPI key
+        return {
+            "address": address,
+            "price": "$450,000",
+            "beds": 3,
+            "baths": 2,
+            "sqft": 1800,
+            "year_built": 1995,
+            "description": f"Beautiful property at {address} with great potential for investment.",
+        }
+
+
 async def fetch_zillow_listing(location: str) -> Optional[Dict[str, Any]]:
     """
     Fetch comprehensive Zillow listing information for a given location.
