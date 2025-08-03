@@ -45,7 +45,26 @@ class ZillowService:
         Returns:
             Dictionary containing property information
         """
-        # For now, return mock data since we don't have RapidAPI key
+        # Check if we have RapidAPI key for real data
+        if not self.api_key:
+            print("⚠️ No RapidAPI key found, using mock data")
+            return self._get_mock_data(address)
+
+        try:
+            print(f"🔍 Fetching real property data for: {address}")
+            # Use the existing fetch_zillow_listing function
+            real_data = await fetch_zillow_listing(address)
+            if real_data:
+                return real_data
+            else:
+                print("⚠️ No real data found, falling back to mock")
+                return self._get_mock_data(address)
+        except Exception as e:
+            print(f"❌ Error fetching real data: {e}, using mock")
+            return self._get_mock_data(address)
+
+    def _get_mock_data(self, address: str) -> Dict[str, Any]:
+        """Generate realistic mock data for development"""
         return {
             "address": address,
             "price": "$450,000",
