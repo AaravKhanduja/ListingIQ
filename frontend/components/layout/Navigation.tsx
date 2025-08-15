@@ -1,10 +1,17 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Home } from 'lucide-react';
+import { Home, LogOut } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from '@/lib/auth';
 
 export function Navigation() {
+  const { signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
   return (
     <header className="border-b border-blue-100 bg-white/90 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -18,7 +25,7 @@ export function Navigation() {
             </div>
             <span className="text-xl font-bold text-black">ListingIQ</span>
           </Link>
-          <nav className="flex items-center">
+          <nav className="flex items-center space-x-3">
             <Link href="/saved">
               <Button
                 variant="outline"
@@ -28,6 +35,15 @@ export function Navigation() {
                 Saved Listings
               </Button>
             </Link>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSignOut}
+              className="text-red-600 border-red-200 hover:bg-red-50"
+            >
+              <LogOut className="h-4 w-4 mr-1" />
+              Sign Out
+            </Button>
           </nav>
         </div>
       </div>
