@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Navigation } from '@/components/layout/Navigation';
-import { Search } from 'lucide-react';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import {
   StatsCards,
   SearchBar,
@@ -14,7 +13,6 @@ import {
   formatDate,
   getScoreColor,
   getTimeAgo,
-  getThisWeekCount,
 } from '@/components/saved';
 
 interface SavedAnalysis {
@@ -22,138 +20,108 @@ interface SavedAnalysis {
   date: string;
   title: string;
   propertyInput: string;
+  inputType?: string;
   analysis: {
     overallScore?: number;
     strengths?: string[];
-    risks?: string[];
+    weaknesses?: string[];
     hiddenIssues?: string[];
     questions?: string[];
   };
 }
 
-export default function SavedAnalysesPage() {
-  const [savedAnalyses, setSavedAnalyses] = useState<SavedAnalysis[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+export default function SavedPage() {
+  const [analyses, setAnalyses] = useState<SavedAnalysis[]>([]);
   const [filteredAnalyses, setFilteredAnalyses] = useState<SavedAnalysis[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate loading time for better UX
-    const loadData = async () => {
-      setIsLoading(true);
-      try {
-        const saved = JSON.parse(localStorage.getItem('savedAnalyses') || '[]');
-        setSavedAnalyses(saved);
-        setFilteredAnalyses(saved);
-      } catch (error) {
-        console.error('Error loading saved analyses:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadData();
+    const savedAnalyses = localStorage.getItem('savedAnalyses');
+    if (savedAnalyses) {
+      const parsed = JSON.parse(savedAnalyses);
+      setAnalyses(parsed);
+      setFilteredAnalyses(parsed);
+    }
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
-    let filtered = savedAnalyses.filter(
+    const filtered = analyses.filter(
       (analysis) =>
         analysis.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         analysis.propertyInput.toLowerCase().includes(searchTerm.toLowerCase())
     );
-
-    // Sort by date (newest first)
-    filtered = filtered.sort((a, b) => {
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
-    });
-
     setFilteredAnalyses(filtered);
-  }, [searchTerm, savedAnalyses]);
+  }, [searchTerm, analyses]);
 
   const handleDelete = (id: number) => {
-    const updated = savedAnalyses.filter((analysis) => analysis.id !== id);
-    setSavedAnalyses(updated);
-    localStorage.setItem('savedAnalyses', JSON.stringify(updated));
+    const updatedAnalyses = analyses.filter((analysis) => analysis.id !== id);
+    setAnalyses(updatedAnalyses);
+    localStorage.setItem('savedAnalyses', JSON.stringify(updatedAnalyses));
   };
 
-  const thisWeekCount = getThisWeekCount(savedAnalyses);
-
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
-        <Navigation />
-        <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <BackButton />
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-black mb-2">Saved Listings</h1>
-            <p className="text-slate-600">Your analyzed properties and insights</p>
-          </div>
-          <LoadingState />
-        </main>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
-      <Navigation />
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <BackButton />
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back Button */}
-        <BackButton />
-
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-black mb-2">Saved Listings</h1>
-          <p className="text-slate-600">Your analyzed properties and insights</p>
-        </div>
-
-        {/* Stats */}
-        <StatsCards totalCount={savedAnalyses.length} thisWeekCount={thisWeekCount} />
-
-        {/* Search */}
-        <SearchBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
-
-        {/* Empty State */}
-        {filteredAnalyses.length === 0 && searchTerm === '' && (
-          <EmptyState
-            title="No saved listings"
-            description="Start analyzing properties to build your research history"
-            showActionButton={true}
-            actionText="Analyze Property"
-            actionHref="/"
-          />
-        )}
-
-        {/* No Search Results */}
-        {filteredAnalyses.length === 0 && searchTerm !== '' && (
-          <EmptyState
-            title="No results found"
-            description="Try adjusting your search terms"
-            showActionButton={false}
-            icon={<Search className="h-8 w-8 text-blue-600" />}
-          />
-        )}
-
-        {/* Listings */}
-        {filteredAnalyses.length > 0 && (
-          <div className="space-y-4">
-            {filteredAnalyses.map((analysis) => (
-              <AnalysisCard
-                key={analysis.id}
-                analysis={analysis}
-                onDelete={handleDelete}
-                getScoreColor={getScoreColor}
-                formatDate={formatDate}
-                getTimeAgo={getTimeAgo}
-              />
-            ))}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-black mb-2">Saved Listings</h1>
+            <p className="text-slate-600">Your saved property analyses</p>
           </div>
-        )}
 
-        {/* Add New Button */}
-        {filteredAnalyses.length > 0 && <AddNewButton />}
-      </main>
-    </div>
+          <StatsCards totalCount={analyses.length} thisWeekCount={getThisWeekCount(analyses)} />
+
+          <div className="mt-8">
+            <SearchBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
+          </div>
+
+          {filteredAnalyses.length === 0 ? (
+            <EmptyState
+              title={analyses.length === 0 ? 'No saved listings' : 'No results found'}
+              description={
+                analyses.length === 0
+                  ? 'Start analyzing properties to build your research history'
+                  : 'Try adjusting your search terms'
+              }
+              showActionButton={analyses.length === 0}
+              actionText="Analyze Property"
+              actionHref="/"
+            />
+          ) : (
+            <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {filteredAnalyses.map((analysis) => (
+                <AnalysisCard
+                  key={analysis.id}
+                  analysis={analysis}
+                  onDelete={handleDelete}
+                  getScoreColor={getScoreColor}
+                  formatDate={formatDate}
+                  getTimeAgo={getTimeAgo}
+                />
+              ))}
+            </div>
+          )}
+
+          <AddNewButton />
+        </div>
+      </div>
+    </ProtectedRoute>
   );
+}
+
+function getThisWeekCount(analyses: SavedAnalysis[]): number {
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+  return analyses.filter((analysis) => {
+    const createdAt = new Date(analysis.date);
+    return createdAt >= oneWeekAgo;
+  }).length;
 }
