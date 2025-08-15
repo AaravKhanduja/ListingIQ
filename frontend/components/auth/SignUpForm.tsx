@@ -162,8 +162,8 @@ export function SignUpForm() {
         </div>
 
         <div>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="w-full h-12 rounded-xl"
             onClick={async () => {
               const { error } = await signInWithGoogle();
