@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export function SignInForm() {
   const [formData, setFormData] = useState({
@@ -18,6 +19,7 @@ export function SignInForm() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { signIn, signInWithGoogle } = useAuth();
 
@@ -27,21 +29,23 @@ export function SignInForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    setError(null);
     setIsLoading(true);
 
     try {
       const { error } = await signIn(formData.email, formData.password);
 
       if (error) {
-        console.error('Sign in error:', error);
-        // You could show an error message here
+        setError(error.message || 'Sign in failed');
         return;
       }
 
-      router.push('/');
+      // Add a small delay to ensure the session is properly set
+      setTimeout(() => {
+        router.push('/');
+      }, 100);
     } catch (error) {
-      console.error('Sign in error:', error);
+      setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);
     }
@@ -158,6 +162,12 @@ export function SignInForm() {
             Continue with Google
           </Button>
         </div>
+
+        {error && (
+          <Alert className="mt-4">
+            <AlertDescription className="text-red-600">{error}</AlertDescription>
+          </Alert>
+        )}
       </CardContent>
     </Card>
   );

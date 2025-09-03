@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export function SignUpForm() {
   const [formData, setFormData] = useState({
@@ -19,6 +20,7 @@ export function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { signUp, signInWithGoogle } = useAuth();
 
@@ -28,9 +30,15 @@ export function SignUpForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
 
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match');
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
       return;
     }
 
@@ -40,14 +48,14 @@ export function SignUpForm() {
       const { error } = await signUp(formData.email, formData.password);
 
       if (error) {
-        console.error('Sign up error:', error);
-        // You could show an error message here
+        setError(error.message || 'Sign up failed');
         return;
       }
 
-      router.push('/');
+      // Show success message instead of redirecting immediately
+      setError('Check your email for a confirmation link!');
     } catch (error) {
-      console.error('Sign up error:', error);
+      setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);
     }
@@ -153,6 +161,16 @@ export function SignUpForm() {
             {isLoading ? 'Creating Account...' : 'Create Account'}
           </Button>
         </form>
+
+        {error && (
+          <Alert className="mt-4">
+            <AlertDescription
+              className={error.includes('confirmation') ? 'text-green-600' : 'text-red-600'}
+            >
+              {error}
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="relative">
           <Separator />
