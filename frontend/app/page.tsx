@@ -7,6 +7,7 @@ import { Navigation } from '@/components/layout/Navigation';
 import { HeroSection } from '@/components/hero/HeroSection';
 import { HowItWorks } from '@/components/how-it-works/HowItWorks';
 import { useAuth } from '@/lib/auth';
+import { ManualPropertyData } from '@/lib/analyze';
 
 export default function HomePage() {
   const [propertyInput, setPropertyInput] = useState('');
@@ -23,27 +24,33 @@ export default function HomePage() {
   const handleAnalyze = async () => {
     console.log('🏠 Home page handleAnalyze called');
 
-    // Check if we have valid input based on the mode stored in localStorage
-    const inputMode = localStorage.getItem('inputMode') || 'location';
-    const currentProperty = localStorage.getItem('currentProperty');
+    const currentPropertyData = localStorage.getItem('currentProperty');
 
-    console.log('📝 Input mode from localStorage:', inputMode);
-    console.log('📍 Current property from localStorage:', currentProperty);
+    console.log('📍 Current property data from localStorage:', currentPropertyData);
 
-    if (!currentProperty || !currentProperty.trim()) {
+    if (!currentPropertyData || !currentPropertyData.trim()) {
       console.error('❌ No property data found for analysis');
       return;
     }
 
-    console.log('✅ Proceeding with analysis');
-    setIsAnalyzing(true);
-
     try {
-      const listingId = Date.now().toString();
-      console.log('🆔 Generated listing ID:', listingId);
+      const parsedData = JSON.parse(currentPropertyData);
+      const { address, manualData } = parsedData;
+
+      if (!address || !manualData?.listing_description) {
+        console.error('❌ Invalid property data structure');
+        return;
+      }
+
+      console.log('✅ Proceeding with analysis');
+      setIsAnalyzing(true);
+
+      // Use the property address as the listing ID (URL-encoded)
+      const listingId = encodeURIComponent(address.trim());
+      console.log('🆔 Using property address as listing ID:', listingId);
       router.push(`/listing/${listingId}`);
     } catch (error) {
-      console.error('❌ Navigation error:', error);
+      console.error('❌ Error parsing property data:', error);
       setIsAnalyzing(false);
     }
   };

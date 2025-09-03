@@ -20,7 +20,6 @@ interface SavedAnalysis {
   date: string;
   title: string;
   propertyInput: string;
-  inputType?: string;
   analysis: {
     overallScore?: number;
     strengths?: string[];
@@ -72,7 +71,7 @@ export default function SavedPage() {
           <BackButton />
 
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-black mb-2">Saved Listings</h1>
+            <h1 className="text-3xl font-bold text-black mb-2">Saved Analyses</h1>
             <p className="text-slate-600">Your saved property analyses</p>
           </div>
 
@@ -84,7 +83,7 @@ export default function SavedPage() {
 
           {filteredAnalyses.length === 0 ? (
             <EmptyState
-              title={analyses.length === 0 ? 'No saved listings' : 'No results found'}
+              title={analyses.length === 0 ? 'No saved analyses' : 'No results found'}
               description={
                 analyses.length === 0
                   ? 'Start analyzing properties to build your research history'

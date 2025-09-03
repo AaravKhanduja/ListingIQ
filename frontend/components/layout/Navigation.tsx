@@ -1,12 +1,12 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Home, LogOut } from 'lucide-react';
+import { Home, LogOut, User } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 
 export function Navigation() {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
 
   const handleSignOut = async () => {
     await signOut();
@@ -26,6 +26,12 @@ export function Navigation() {
             <span className="text-xl font-bold text-black">ListingIQ</span>
           </Link>
           <nav className="flex items-center space-x-3">
+            {user && (
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <User className="h-4 w-4" />
+                <span>{user.email}</span>
+              </div>
+            )}
             <Link href="/saved">
               <Button
                 variant="outline"
