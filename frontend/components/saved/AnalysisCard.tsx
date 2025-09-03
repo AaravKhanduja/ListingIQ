@@ -21,7 +21,6 @@ interface SavedAnalysis {
   date: string;
   title: string;
   propertyInput: string;
-  inputType?: string;
   analysis: {
     overallScore?: number;
     strengths?: string[];
@@ -63,7 +62,7 @@ export function AnalysisCard({
                   variant="outline"
                   className={`${getScoreColor(analysis.analysis.overallScore)}`}
                 >
-                  {analysis.analysis.overallScore}/100
+                  {Math.round(analysis.analysis.overallScore / 20)}/5
                 </Badge>
               )}
             </div>
