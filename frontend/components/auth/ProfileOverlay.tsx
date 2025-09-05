@@ -62,10 +62,12 @@ export function ProfileOverlay({ isOpen, onClose }: ProfileOverlayProps) {
 
   const handleDeleteAccount = async () => {
     if (!user) return;
-
+    
+    console.log('Delete account button clicked, user:', user);
     setIsDeletingAccount(true);
     try {
       const result = await deleteAccount();
+      console.log('Delete account result:', result);
       if (!result.success) {
         console.error('Failed to delete account:', result.error);
         // You could show a toast notification here
