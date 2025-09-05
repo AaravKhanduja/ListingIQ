@@ -185,9 +185,10 @@ export function SignUpForm() {
             className="w-full h-12 rounded-xl"
             onClick={async () => {
               const { error } = await signInWithGoogle();
-              if (!error) {
-                router.push('/');
+              if (error) {
+                setError(error.message || 'Google sign-in failed');
               }
+              // Don't redirect here - Google OAuth will handle the redirect
             }}
           >
             <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">

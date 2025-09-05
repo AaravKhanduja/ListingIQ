@@ -232,15 +232,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { signOut: supabaseSignOut } = await import('@/lib/supabase/auth');
         const { error } = await supabaseSignOut();
         if (error) {
-          // Silent fail
+          console.error('Sign out error:', error);
         }
+
         // Clear user state regardless of error
         setUser(null);
-        // Redirect to signin page
+
+        // Clear any local storage that might contain auth data
+        localStorage.removeItem('supabase.auth.token');
+        sessionStorage.clear();
+
+        // Wait a moment for the session to be fully cleared
+        await new Promise((resolve) => setTimeout(resolve, 200));
+
+        // Force a full page reload to clear any residual state
         window.location.href = '/auth/signin';
-      } catch {
+      } catch (error) {
+        console.error('Sign out error:', error);
         // Clear user state even if signout fails
         setUser(null);
+        // Force a full page reload to clear any residual state
         window.location.href = '/auth/signin';
       }
     } else {

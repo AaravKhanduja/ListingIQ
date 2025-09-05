@@ -3,6 +3,13 @@ import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  
+  // Skip middleware for auth routes to avoid interference
+  if (pathname.startsWith('/auth/')) {
+    return NextResponse.next();
+  }
+  
   // Only run middleware in production when Supabase is configured
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -32,7 +39,11 @@ export async function middleware(request: NextRequest) {
   });
 
   // Refresh session if expired - required for Server Components
-  await supabase.auth.getUser();
+  try {
+    await supabase.auth.getUser();
+  } catch (error) {
+    console.error('Middleware auth error:', error);
+  }
 
   return response;
 }

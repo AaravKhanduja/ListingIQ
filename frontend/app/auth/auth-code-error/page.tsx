@@ -62,16 +62,18 @@ function AuthCodeErrorContent() {
 
 export default function AuthCodeErrorPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <h1 className="text-2xl font-bold text-red-600">Authentication Error</h1>
-            <p className="text-gray-600 mt-2">Loading...</p>
-          </CardHeader>
-        </Card>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <h1 className="text-2xl font-bold text-red-600">Authentication Error</h1>
+              <p className="text-gray-600 mt-2">Loading...</p>
+            </CardHeader>
+          </Card>
+        </div>
+      }
+    >
       <AuthCodeErrorContent />
     </Suspense>
   );
