@@ -4,12 +4,25 @@ import { Button } from '@/components/ui/button';
 import { Home, LogOut, User } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
+import { useState } from 'react';
 
 export function Navigation() {
   const { signOut, user } = useAuth();
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleSignOut = async () => {
-    await signOut();
+    if (!user) return;
+
+    setIsSigningOut(true);
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Signout failed:', error);
+      // Even if signout fails, try to redirect
+      window.location.href = '/auth/signin';
+    } finally {
+      setIsSigningOut(false);
+    }
   };
 
   return (
@@ -27,29 +40,43 @@ export function Navigation() {
           </Link>
           <nav className="flex items-center space-x-3">
             {user && (
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <User className="h-4 w-4" />
-                <span>{user.email}</span>
-              </div>
+              <>
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <User className="h-4 w-4" />
+                  <span>{user.email}</span>
+                </div>
+                <Link href="/saved">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+                  >
+                    Saved Listings
+                  </Button>
+                </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSignOut}
+                  disabled={isSigningOut}
+                  className="text-red-600 border-red-200 hover:bg-red-50 disabled:opacity-50"
+                >
+                  <LogOut className="h-4 w-4 mr-1" />
+                  {isSigningOut ? 'Signing Out...' : 'Sign Out'}
+                </Button>
+              </>
             )}
-            <Link href="/saved">
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
-              >
-                Saved Listings
-              </Button>
-            </Link>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSignOut}
-              className="text-red-600 border-red-200 hover:bg-red-50"
-            >
-              <LogOut className="h-4 w-4 mr-1" />
-              Sign Out
-            </Button>
+            {!user && (
+              <Link href="/auth/signin">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
+                >
+                  Sign In
+                </Button>
+              </Link>
+            )}
           </nav>
         </div>
       </div>

@@ -1,6 +1,5 @@
-"use client";
+'use client';
 
-import { Badge } from '@/components/ui/badge';
 import { Shield } from 'lucide-react';
 
 export function HeroHeading() {

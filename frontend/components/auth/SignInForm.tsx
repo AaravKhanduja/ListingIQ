@@ -1,15 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { useState, useRef, useEffect } from 'react';
+import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '@/lib/auth';
+import { useRouter } from 'next/navigation';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export function SignInForm() {
@@ -20,8 +19,28 @@ export function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [shouldRedirect, setShouldRedirect] = useState(false);
   const router = useRouter();
   const { signIn, signInWithGoogle } = useAuth();
+  const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Handle redirect after component potentially unmounts
+  useEffect(() => {
+    if (shouldRedirect) {
+      console.log('🚀 Redirecting from useEffect...');
+      // Use window.location as fallback
+      window.location.href = '/';
+    }
+  }, [shouldRedirect]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -33,18 +52,35 @@ export function SignInForm() {
     setIsLoading(true);
 
     try {
+      console.log('🔄 Starting signin process...');
       const { error } = await signIn(formData.email, formData.password);
 
       if (error) {
+        console.error('❌ Signin error:', error);
         setError(error.message || 'Sign in failed');
         return;
       }
 
-      // Add a small delay to ensure the session is properly set
-      setTimeout(() => {
+      console.log('✅ Signin successful, setting up redirect...');
+
+      // Set a flag to redirect
+      setShouldRedirect(true);
+
+      // Also try immediate redirect
+      try {
+        console.log('🚀 Attempting immediate redirect...');
         router.push('/');
-      }, 100);
+      } catch (redirectError) {
+        console.error('❌ Router redirect failed:', redirectError);
+      }
+
+      // Fallback redirect with timeout
+      redirectTimeoutRef.current = setTimeout(() => {
+        console.log('🔄 Fallback redirect...');
+        window.location.href = '/';
+      }, 1000);
     } catch (error) {
+      console.error('❌ Unexpected error:', error);
       setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);

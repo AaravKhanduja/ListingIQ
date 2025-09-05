@@ -7,7 +7,6 @@ import { Navigation } from '@/components/layout/Navigation';
 import { HeroSection } from '@/components/hero/HeroSection';
 import { HowItWorks } from '@/components/how-it-works/HowItWorks';
 import { useAuth } from '@/lib/auth';
-import { ManualPropertyData } from '@/lib/analyze';
 
 export default function HomePage() {
   const [propertyInput, setPropertyInput] = useState('');

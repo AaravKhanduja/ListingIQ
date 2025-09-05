@@ -9,7 +9,6 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   ArrowRight,
   MapPin,
-  Search,
   AlertCircle,
   Home,
   Bed,

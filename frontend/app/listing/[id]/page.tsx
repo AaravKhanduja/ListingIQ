@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/lib/auth';
 
 import { Navigation } from '@/components/layout/Navigation';
 import { ActionButtons } from '@/components/listing/ActionButtons';
@@ -17,13 +16,11 @@ import {
   AlertTriangle,
   Shield,
   Target,
-  Globe,
   ChevronDown,
   ChevronUp,
   Home,
   MapPin,
   FileText,
-  DollarSign,
   Bed,
   Bath,
   Ruler,
@@ -75,8 +72,6 @@ interface ListingData {
 
 export default function ListingPage() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
 
   const [listingData, setListingData] = useState<ListingData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -92,320 +87,476 @@ export default function ListingPage() {
     });
   };
 
-  // Check authentication and fetch data
   useEffect(() => {
-    // Handle authentication redirect
-    if (!authLoading && !user) {
-      router.push('/auth/signin');
-      return;
-    }
+    const fetchAnalysis = async () => {
+      if (!id) return;
+      try {
+        setLoading(true);
+        setError(null);
 
-    // Only fetch data if authenticated and not loading
-    if (!authLoading && user && id) {
-      const fetchAnalysis = async () => {
-        try {
-          setLoading(true);
-          setError(null);
+        const propertyAddress = decodeURIComponent(String(id));
 
-          const propertyAddress = decodeURIComponent(String(id));
+        // Get the manual data from localStorage
+        const currentPropertyData = localStorage.getItem('currentProperty');
+        let manualData: ManualPropertyData | undefined;
 
-          // Get the manual data from localStorage
-          const currentPropertyData = localStorage.getItem('currentProperty');
-          let manualData: ManualPropertyData | undefined;
-
-          if (currentPropertyData) {
-            try {
-              const parsedData = JSON.parse(currentPropertyData);
-              if (parsedData.address === propertyAddress) {
-                manualData = parsedData.manualData;
-              }
-            } catch (e) {
-              console.error('Failed to parse stored property data:', e);
+        if (currentPropertyData) {
+          try {
+            const parsedData = JSON.parse(currentPropertyData);
+            if (parsedData.address === propertyAddress) {
+              manualData = parsedData.manualData;
             }
+          } catch (e) {
+            console.error('Failed to parse stored property data:', e);
           }
+        }
 
-          const request: AnalyzeRequest = {
-            property_address: propertyAddress,
-            property_title: propertyAddress,
-            manual_data: manualData,
+        const request: AnalyzeRequest = {
+          property_address: propertyAddress,
+          property_title: propertyAddress,
+          manual_data: manualData,
+        };
+
+        const response = await analyzeListing(request);
+
+        if (response.success && response.analysis) {
+          const a = response.analysis;
+
+          const newAnalysis: ListingData = {
+            propertyTitle: a.property_title || propertyAddress,
+            summary: a.summary || '',
+            executiveSummary: a.executive_summary,
+            disclaimer: a.disclaimer,
+            manualData: a.manual_data,
+            score: {
+              composite: a.overall_score ?? 0,
+            },
+            marketAnalysis: a.market_analysis || undefined,
+            investmentPotential: a.investment_potential || undefined,
+            riskAssessment: a.risk_assessment || undefined,
+            renovationAnalysis: a.renovation_analysis || undefined,
+            strengths: a.strengths || [],
+            weaknesses: a.weaknesses || [],
+            hiddenIssues: a.hidden_issues || [],
+            questions: a.questions || [],
+            generatedAt: a.generated_at || undefined,
           };
 
-          const response = await analyzeListing(request);
-
-          if (response.success && response.analysis) {
-            const a = response.analysis;
-
-            const newAnalysis: ListingData = {
-              propertyTitle: a.property_title || propertyAddress,
-              summary: a.summary || '',
-              executiveSummary: a.executive_summary,
-              disclaimer: a.disclaimer,
-              manualData: a.manual_data,
-              score: {
-                composite: a.overall_score ?? 0,
-              },
-              marketAnalysis: a.market_analysis || undefined,
-              investmentPotential: a.investment_potential || undefined,
-              riskAssessment: a.risk_assessment || undefined,
-              renovationAnalysis: a.renovation_analysis || undefined,
-              strengths: a.strengths || [],
-              weaknesses: a.weaknesses || [],
-              hiddenIssues: a.hidden_issues || [],
-              questions: a.questions || [],
-              generatedAt: a.generated_at,
-            };
-
-            setListingData(newAnalysis);
-          } else {
-            setError(response.error || 'Failed to analyze property');
-          }
-        } catch (err) {
-          console.error('Error fetching analysis:', err);
-          setError('Failed to fetch property analysis');
-        } finally {
-          setLoading(false);
+          setListingData(newAnalysis);
+        } else {
+          setError(response.error || 'Failed to load analysis');
         }
-      };
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : 'An error occurred';
 
-      fetchAnalysis();
-    }
-  }, [user, authLoading, router, id]);
+        // Check if this is an authentication error and redirect to signin
+        if (
+          errorMessage.includes('Token expired') ||
+          errorMessage.includes('No session found') ||
+          errorMessage.includes('please sign in again')
+        ) {
+          console.log('🔐 Authentication error detected, redirecting to signin...');
+          window.location.href = '/auth/signin';
+          return; // Don't set error state since we're redirecting
+        }
 
-  // Show loading while checking authentication
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+        setError(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAnalysis();
+  }, [id]);
 
-  // Redirect if not authenticated
-  if (!user) {
-    return null; // Will redirect in useEffect
-  }
-
-  if (loading) {
-    return <LoadingState analysisProgress={50} />;
-  }
+  if (loading) return <LoadingState analysisProgress={0} />;
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
         <Navigation />
-        <div className="max-w-4xl mx-auto px-4 py-8">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
-            <AlertTriangle className="mx-auto h-12 w-12 text-red-500 mb-4" />
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Analysis Error</h1>
-            <p className="text-gray-600 mb-6">{error}</p>
-            <Button onClick={() => router.push('/')}>
-              <Home className="mr-2 h-4 w-4" />
-              Back to Home
-            </Button>
+            <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Analysis Unavailable</h2>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()}>Retry</Button>
           </div>
-        </div>
+        </main>
       </div>
     );
   }
 
-  if (!listingData) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Navigation />
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">No Analysis Found</h1>
-            <p className="text-gray-600 mb-6">Unable to load property analysis.</p>
-            <Button onClick={() => router.push('/')}>
-              <Home className="mr-2 h-4 w-4" />
-              Back to Home
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (!listingData) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
       <Navigation />
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <Link
-            href="/"
-            className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Home
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Back */}
+        <div className="mb-6">
+          <Link href="/">
+            <Button variant="outline">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Search
+            </Button>
           </Link>
-
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{listingData.propertyTitle}</h1>
-          <p className="text-gray-600 text-lg">{listingData.summary}</p>
         </div>
 
-        {/* Action Buttons */}
-        <ActionButtons />
+        {/* Title */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Property Analysis</h1>
+          <p className="text-base text-gray-700 leading-relaxed font-medium">
+            Expert analysis based on the information you provided. Educational/informational only —
+            not real estate, investment, or financial advice.
+          </p>
+        </div>
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        {/* Property Summary Bar */}
+        <div className="mb-8 p-4 bg-white border border-gray-200 rounded-lg shadow-sm sticky top-4 z-10">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-blue-600" />
+              <span className="font-semibold text-gray-900 text-lg">
+                {listingData.manualData?.property_type
+                  ? `${listingData.manualData.property_type} - `
+                  : ''}
+                {listingData.propertyTitle}
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <span className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white shadow-sm">
+                Analysis Score: {Math.round((listingData.score?.composite ?? 0) / 20)}/5
+              </span>
+              {listingData.manualData?.price && (
+                <span className="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
+                  {listingData.manualData.price}
+                </span>
+              )}
+              {listingData.manualData?.bedrooms && listingData.manualData?.bathrooms && (
+                <span className="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium bg-purple-100 text-purple-800 border border-purple-200">
+                  {listingData.manualData.bedrooms} bed, {listingData.manualData.bathrooms} bath
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Property Details */}
+        {listingData.manualData && (
+          <div className="mb-8 bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Home className="h-5 w-5 text-blue-600" />
+              Property Details
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {listingData.manualData.property_type && (
+                <div className="flex items-center gap-2">
+                  <Home className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm text-gray-700">
+                    <span className="font-medium">Type:</span>{' '}
+                    {listingData.manualData.property_type}
+                  </span>
+                </div>
+              )}
+              {listingData.manualData.bedrooms && (
+                <div className="flex items-center gap-2">
+                  <Bed className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm text-gray-700">
+                    <span className="font-medium">Bedrooms:</span> {listingData.manualData.bedrooms}
+                  </span>
+                </div>
+              )}
+              {listingData.manualData.bathrooms && (
+                <div className="flex items-center gap-2">
+                  <Bath className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm text-gray-700">
+                    <span className="font-medium">Bathrooms:</span>{' '}
+                    {listingData.manualData.bathrooms}
+                  </span>
+                </div>
+              )}
+              {listingData.manualData.square_feet && (
+                <div className="flex items-center gap-2">
+                  <Ruler className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm text-gray-700">
+                    <span className="font-medium">Square Feet:</span>{' '}
+                    {listingData.manualData.square_feet.toLocaleString()}
+                  </span>
+                </div>
+              )}
+              {listingData.manualData.year_built && (
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm text-gray-700">
+                    <span className="font-medium">Year Built:</span>{' '}
+                    {listingData.manualData.year_built}
+                  </span>
+                </div>
+              )}
+              {listingData.manualData.lot_size && (
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm text-gray-700">
+                    <span className="font-medium">Lot Size:</span> {listingData.manualData.lot_size}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Analysis Grid - 2x2 Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Key Strengths */}
-          <Card>
-            <CardHeader className="bg-green-50 border-green-200">
-              <CardTitle className="flex items-center text-green-800">
-                <Shield className="mr-2 h-5 w-5" />
-                Key Strengths
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <ul className="space-y-2">
-                {listingData.strengths.map((strength, index) => (
-                  <li key={index} className="flex items-start">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                    <span className="text-gray-700">{strength}</span>
+          {listingData.strengths?.length > 0 && (
+            <div className="bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-xl p-6 shadow-sm">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="p-2.5 bg-emerald-100 rounded-lg">
+                  <Shield className="h-7 w-7 text-emerald-600" />
+                </div>
+                <h3 className="font-bold text-emerald-800 text-2xl">Key Strengths</h3>
+              </div>
+              <ul className="space-y-4 mb-5">
+                {listingData.strengths.map((strength, i) => (
+                  <li
+                    key={i}
+                    className="text-base text-emerald-700 flex items-start gap-3 leading-relaxed"
+                  >
+                    <span className="text-emerald-500 mt-0.5 text-xl font-bold flex-shrink-0">
+                      ✓
+                    </span>
+                    <span className="font-medium">{strength}</span>
                   </li>
                 ))}
               </ul>
-            </CardContent>
-          </Card>
+              <div className="bg-emerald-100 rounded-lg p-4 border border-emerald-200">
+                <p className="text-base font-semibold text-emerald-800 mb-2">💡 Take Action:</p>
+                <p className="text-base text-emerald-700 leading-relaxed font-medium">
+                  Consider how these strengths align with your investment goals and lifestyle
+                  preferences.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Areas to Research */}
-          <Card>
-            <CardHeader className="bg-yellow-50 border-yellow-200">
-              <CardTitle className="flex items-center text-yellow-800">
-                <Target className="mr-2 h-5 w-5" />
-                Areas to Research
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <ul className="space-y-2">
-                {listingData.weaknesses.map((weakness, index) => (
-                  <li key={index} className="flex items-start">
-                    <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                    <span className="text-gray-700">{weakness}</span>
+          {listingData.weaknesses?.length > 0 && (
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl p-6 shadow-sm">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="p-2.5 bg-amber-100 rounded-lg">
+                  <AlertTriangle className="h-7 w-7 text-amber-600" />
+                </div>
+                <h3 className="font-bold text-amber-800 text-2xl">Areas to Research</h3>
+              </div>
+              <ul className="space-y-4 mb-5">
+                {listingData.weaknesses.map((weakness, i) => (
+                  <li
+                    key={i}
+                    className="text-base text-amber-700 flex items-start gap-3 leading-relaxed"
+                  >
+                    <span className="text-amber-500 mt-0.5 text-xl font-bold flex-shrink-0">
+                      ⚠
+                    </span>
+                    <span className="font-medium">{weakness}</span>
                   </li>
                 ))}
               </ul>
-            </CardContent>
-          </Card>
+              <div className="bg-amber-100 rounded-lg p-4 border border-amber-200">
+                <p className="text-base font-semibold text-amber-800 mb-2">🔍 Research Priority:</p>
+                <p className="text-base text-amber-700 leading-relaxed font-medium">
+                  Dive deeper into these areas to understand potential impacts on your decision.
+                </p>
+              </div>
+            </div>
+          )}
 
-          {/* Hidden Risks & Issues */}
-          <Card>
-            <CardHeader className="bg-red-50 border-red-200">
-              <CardTitle className="flex items-center text-red-800">
-                <AlertTriangle className="mr-2 h-5 w-5" />
-                Hidden Risks & Issues
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <ul className="space-y-2">
-                {listingData.hiddenIssues.map((issue, index) => (
-                  <li key={index} className="flex items-start">
-                    <div className="w-2 h-2 bg-red-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                    <span className="text-gray-700">{issue}</span>
+          {/* Hidden Risks */}
+          {listingData.hiddenIssues?.length > 0 && (
+            <div className="bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-200 rounded-xl p-6 shadow-sm">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="p-2.5 bg-red-100 rounded-lg">
+                  <AlertTriangle className="h-7 w-7 text-red-600" />
+                </div>
+                <h3 className="font-bold text-red-800 text-2xl">Hidden Risks & Issues</h3>
+              </div>
+              <ul className="space-y-4 mb-5">
+                {listingData.hiddenIssues.map((issue, i) => (
+                  <li
+                    key={i}
+                    className="text-base text-red-700 flex items-start gap-3 leading-relaxed"
+                  >
+                    <span className="text-red-500 mt-0.5 text-xl font-bold flex-shrink-0">🚨</span>
+                    <span className="font-medium">{issue}</span>
                   </li>
                 ))}
               </ul>
-            </CardContent>
-          </Card>
+              <div className="bg-red-100 rounded-lg p-4 border border-red-200">
+                <p className="text-base font-semibold text-red-800 mb-2">⚠️ Critical:</p>
+                <p className="text-base text-red-700 leading-relaxed font-medium">
+                  These issues require immediate attention and may significantly impact your
+                  decision.
+                </p>
+              </div>
+            </div>
+          )}
 
-          {/* Questions to Ask Realtor */}
-          <Card>
-            <CardHeader className="bg-blue-50 border-blue-200">
-              <CardTitle className="flex items-center text-blue-800">
-                <Globe className="mr-2 h-5 w-5" />
-                Questions to Ask Realtor
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <ul className="space-y-2">
-                {listingData.questions.map((question, index) => (
-                  <li key={index} className="flex items-start">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                    <span className="text-gray-700">{question}</span>
+          {/* Questions for Realtor */}
+          {listingData.questions?.length > 0 && (
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 shadow-sm">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="p-2.5 bg-blue-100 rounded-lg">
+                  <Target className="h-7 w-7 text-blue-600" />
+                </div>
+                <h3 className="font-bold text-blue-800 text-2xl">Questions to Ask Your Realtor</h3>
+              </div>
+              <ul className="space-y-4 mb-5">
+                {listingData.questions.map((question, i) => (
+                  <li
+                    key={i}
+                    className="text-base text-blue-700 flex items-start gap-3 leading-relaxed"
+                  >
+                    <span className="text-blue-500 mt-0.5 text-xl font-bold flex-shrink-0">❓</span>
+                    <span className="font-medium">{question}</span>
                   </li>
                 ))}
               </ul>
-            </CardContent>
-          </Card>
+              <div className="bg-blue-100 rounded-lg p-4 border border-blue-200">
+                <p className="text-base font-semibold text-blue-800 mb-2">💡 Due Diligence:</p>
+                <p className="text-base text-blue-700 leading-relaxed font-medium">
+                  These questions will help you gather critical information for your decision-making
+                  process.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Additional Sections */}
-        {listingData.marketAnalysis && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <MapPin className="mr-2 h-5 w-5" />
-                Market Analysis
+        {/* Additional Information - 2x2 Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Property Condition Indicators */}
+          <div className="bg-gradient-to-br from-slate-50 to-gray-50 border-2 border-slate-200 rounded-xl p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="p-2.5 bg-slate-100 rounded-lg">
+                <Home className="h-7 w-7 text-slate-600" />
+              </div>
+              <h3 className="font-bold text-slate-800 text-xl">Property Condition Clues</h3>
+            </div>
+            <div className="bg-slate-100 rounded-lg p-4 border border-slate-200">
+              <p className="text-base text-slate-700 leading-relaxed font-medium">
+                {listingData.marketAnalysis?.trends ||
+                  'Analysis based on provided property information only'}
+              </p>
+            </div>
+          </div>
+
+          {/* Location Advantages */}
+          <div className="bg-gradient-to-br from-slate-50 to-gray-50 border-2 border-slate-200 rounded-xl p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="p-2.5 bg-slate-100 rounded-lg">
+                <MapPin className="h-7 w-7 text-slate-600" />
+              </div>
+              <h3 className="font-bold text-slate-800 text-xl">Location Benefits</h3>
+            </div>
+            <div className="bg-slate-100 rounded-lg p-4 border border-slate-200">
+              <p className="text-base text-slate-700 leading-relaxed font-medium">
+                {listingData.investmentPotential?.cash_flow ||
+                  'Based on provided property details only'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Analysis Methodology */}
+        <Card className="mt-8">
+          <CardHeader
+            className="cursor-pointer hover:bg-gray-50"
+            onClick={() => toggleSection('methodology')}
+          >
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Analysis Methodology & Limitations
               </CardTitle>
-            </CardHeader>
+              {expandedSections.has('methodology') ? (
+                <ChevronUp className="h-5 w-5 text-gray-500" />
+              ) : (
+                <ChevronDown className="h-5 w-5 text-gray-500" />
+              )}
+            </div>
+          </CardHeader>
+          {expandedSections.has('methodology') && (
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-6">
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Market Trends</h4>
-                  <p className="text-gray-700">{listingData.marketAnalysis.trends}</p>
+                  <h4 className="font-semibold text-gray-900 mb-2">What This Analysis Covers</h4>
+                  <p className="text-base text-gray-700 leading-relaxed font-medium">
+                    This analysis evaluates the property information you provided using AI
+                    technology trained on real estate principles. It identifies strengths, research
+                    areas, hidden risks, and critical questions without making assumptions about
+                    market conditions.
+                  </p>
                 </div>
+
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Comparables</h4>
-                  <p className="text-gray-700">{listingData.marketAnalysis.comparables}</p>
+                  <h4 className="font-semibold text-gray-900 mb-2">Data Sources</h4>
+                  <p className="text-base text-gray-700 leading-relaxed font-medium">
+                    • Property details you provided (type, size, features, price)
+                    <br />
+                    • Listing description and additional notes
+                    <br />• AI analysis of property characteristics and potential issues
+                  </p>
                 </div>
+
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Appreciation Potential</h4>
-                  <p className="text-gray-700">
-                    {listingData.marketAnalysis.appreciation_potential}
+                  <h4 className="font-semibold text-gray-900 mb-2">What&apos;s NOT Included</h4>
+                  <p className="text-base text-gray-700 leading-relaxed font-medium">
+                    • Current market trends or comparable sales
+                    <br />
+                    • Real-time property valuations
+                    <br />
+                    • Local market conditions or appreciation rates
+                    <br />• Investment return projections
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-2">
+                    Recommendations for Further Research
+                  </h4>
+                  <p className="text-base text-gray-700 leading-relaxed font-medium">
+                    • Consult with local real estate professionals
+                    <br />
+                    • Research recent comparable sales in the area
+                    <br />
+                    • Investigate local market conditions and trends
+                    <br />• Conduct thorough property inspections
                   </p>
                 </div>
               </div>
             </CardContent>
-          </Card>
+          )}
+        </Card>
+
+        {/* Generated At */}
+        {listingData.generatedAt && (
+          <div className="text-center text-base text-gray-700 leading-relaxed font-medium mt-8">
+            Generated on: {listingData.generatedAt}
+          </div>
         )}
 
-        {listingData.investmentPotential && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <DollarSign className="mr-2 h-5 w-5" />
-                Investment Potential
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Rental Income</h4>
-                  <p className="text-gray-700">{listingData.investmentPotential.rental_income}</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Cash Flow</h4>
-                  <p className="text-gray-700">{listingData.investmentPotential.cash_flow}</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">ROI Projections</h4>
-                  <p className="text-gray-700">{listingData.investmentPotential.roi_projections}</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Appreciation Timeline</h4>
-                  <p className="text-gray-700">
-                    {listingData.investmentPotential.appreciation_timeline}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {/* Actions */}
+        <ActionButtons />
 
-        {/* Disclaimer */}
-        {listingData.disclaimer && (
-          <Card className="bg-gray-50 border-gray-200">
-            <CardContent className="pt-6">
-              <p className="text-sm text-gray-600 text-center italic">{listingData.disclaimer}</p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+        {/* Footer disclaimer */}
+        <div className="mt-12 pt-8 border-t border-gray-200">
+          <div className="max-w-4xl mx-auto text-center">
+            <p className="text-base text-gray-700 leading-relaxed font-medium">
+              Informational only. Please consult licensed professionals.
+            </p>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

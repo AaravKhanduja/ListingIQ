@@ -1,8 +1,62 @@
 import jsPDF from 'jspdf';
 
+interface ScoreBreakdown {
+  location: number;
+  condition: number;
+  market_potential: number;
+  investment_value: number;
+}
+
+interface MarketAnalysis {
+  trends: string;
+  comparables: string;
+  appreciation_potential: string;
+}
+
+interface InvestmentPotential {
+  rental_income: string;
+  cash_flow: string;
+  roi_projections: string;
+  appreciation_timeline: string;
+}
+
+interface RiskAssessment {
+  market_risks: string[];
+  property_risks: string[];
+  mitigation_strategies: string[];
+}
+
+interface RenovationAnalysis {
+  estimated_costs: string;
+  priority_improvements: string[];
+  renovation_roi: string;
+}
+
+interface InvestmentRecommendation {
+  recommendation: string;
+  ideal_buyer: string;
+  timeline: string;
+}
+
+interface AnalysisData {
+  overallScore?: number;
+  scoreBreakdown?: ScoreBreakdown;
+  executiveSummary?: string;
+  marketAnalysis?: MarketAnalysis;
+  investmentPotential?: InvestmentPotential;
+  riskAssessment?: RiskAssessment;
+  renovationAnalysis?: RenovationAnalysis;
+  investmentRecommendation?: InvestmentRecommendation;
+  strengths: string[];
+  weaknesses: string[];
+  hiddenIssues: string[];
+  questions: string[];
+  generatedAt?: string;
+}
+
 export const downloadTextPDF = async (filename: string = 'listing-analysis.pdf') => {
   try {
-    console.log('Starting PDF generation...');
+    // Starting PDF generation...
     
     // Get the main content
     const mainContent = document.querySelector('main');
@@ -12,7 +66,6 @@ export const downloadTextPDF = async (filename: string = 'listing-analysis.pdf')
 
     // Extract content
     const title = mainContent.querySelector('h1, h2, h3')?.textContent || 'Property Analysis';
-    const summary = mainContent.querySelector('p')?.textContent || '';
     
     // Extract comprehensive analysis data
     const analysisData = extractAnalysisData(mainContent);
@@ -335,16 +388,19 @@ export const downloadTextPDF = async (filename: string = 'listing-analysis.pdf')
     pdf.text(`Generated on: ${generatedAt}`, 20, 280);
     
     pdf.save(filename);
-    console.log('PDF generation completed successfully');
     
   } catch (error) {
-    console.error('Error in PDF generation:', error);
     throw new Error('Failed to generate PDF. Please try again.');
   }
 };
 
 function extractAnalysisData(mainContent: Element) {
-  const data: any = {};
+  const data: AnalysisData = {
+    strengths: [],
+    weaknesses: [],
+    hiddenIssues: [],
+    questions: [],
+  };
   
   // Extract score
   const scoreElement = mainContent.querySelector('.inline-flex.items-center.px-6.py-3');
@@ -390,11 +446,6 @@ function extractAnalysisData(mainContent: Element) {
   
   // Extract analysis sections
   const allCards = mainContent.querySelectorAll('[class*="card"]');
-  let strengths: string[] = [];
-  let weaknesses: string[] = [];
-  let hiddenIssues: string[] = [];
-  let questions: string[] = [];
-  
   allCards.forEach((card) => {
     const cardTitle = card.querySelector('[class*="text-xl"], [class*="card-title"], h3, h4')?.textContent?.toLowerCase();
     const items = Array.from(card.querySelectorAll('p'))
@@ -402,20 +453,15 @@ function extractAnalysisData(mainContent: Element) {
       .filter((text): text is string => text !== null && text !== undefined && text.trim().length > 0);
     
     if (cardTitle?.includes('strength')) {
-      strengths = items;
+      data.strengths = items;
     } else if (cardTitle?.includes('risk') || cardTitle?.includes('weakness')) {
-      weaknesses = items;
+      data.weaknesses = items;
     } else if (cardTitle?.includes('hidden') || cardTitle?.includes('issue')) {
-      hiddenIssues = items;
+      data.hiddenIssues = items;
     } else if (cardTitle?.includes('question')) {
-      questions = items;
+      data.questions = items;
     }
   });
-  
-  data.strengths = strengths;
-  data.weaknesses = weaknesses;
-  data.hiddenIssues = hiddenIssues;
-  data.questions = questions;
   
   // Extract generated at
   const generatedAtElement = mainContent.querySelector('.text-center.text-sm.text-gray-500');
@@ -439,7 +485,7 @@ function extractAnalysisData(mainContent: Element) {
         };
       }
     } catch (error) {
-      console.warn('Failed to get analysis from localStorage:', error);
+      // Silent fail
     }
   }
   
@@ -448,18 +494,22 @@ function extractAnalysisData(mainContent: Element) {
 
 function extractMarketAnalysis(content: Element) {
   const sections = content.querySelectorAll('div');
-  const data: any = {};
+  const data: MarketAnalysis = {
+    trends: '',
+    comparables: '',
+    appreciation_potential: '',
+  };
   
   sections.forEach(section => {
     const title = section.querySelector('h4')?.textContent?.toLowerCase();
     const text = section.querySelector('p')?.textContent?.trim();
     
     if (title?.includes('trend')) {
-      data.trends = text;
+      data.trends = text || '';
     } else if (title?.includes('comparable')) {
-      data.comparables = text;
+      data.comparables = text || '';
     } else if (title?.includes('appreciation')) {
-      data.appreciation_potential = text;
+      data.appreciation_potential = text || '';
     }
   });
   
@@ -468,20 +518,25 @@ function extractMarketAnalysis(content: Element) {
 
 function extractInvestmentPotential(content: Element) {
   const sections = content.querySelectorAll('div');
-  const data: any = {};
+  const data: InvestmentPotential = {
+    rental_income: '',
+    cash_flow: '',
+    roi_projections: '',
+    appreciation_timeline: '',
+  };
   
   sections.forEach(section => {
     const title = section.querySelector('h4')?.textContent?.toLowerCase();
     const text = section.querySelector('p')?.textContent?.trim();
     
     if (title?.includes('rental')) {
-      data.rental_income = text;
+      data.rental_income = text || '';
     } else if (title?.includes('cash flow')) {
-      data.cash_flow = text;
+      data.cash_flow = text || '';
     } else if (title?.includes('roi')) {
-      data.roi_projections = text;
+      data.roi_projections = text || '';
     } else if (title?.includes('timeline')) {
-      data.appreciation_timeline = text;
+      data.appreciation_timeline = text || '';
     }
   });
   
@@ -490,7 +545,11 @@ function extractInvestmentPotential(content: Element) {
 
 function extractRiskAssessment(content: Element) {
   const sections = content.querySelectorAll('div');
-  const data: any = {};
+  const data: RiskAssessment = {
+    market_risks: [],
+    property_risks: [],
+    mitigation_strategies: [],
+  };
   
   sections.forEach(section => {
     const title = section.querySelector('h4')?.textContent?.toLowerCase();
@@ -512,7 +571,11 @@ function extractRiskAssessment(content: Element) {
 
 function extractRenovationAnalysis(content: Element) {
   const sections = content.querySelectorAll('div');
-  const data: any = {};
+  const data: RenovationAnalysis = {
+    estimated_costs: '',
+    priority_improvements: [],
+    renovation_roi: '',
+  };
   
   sections.forEach(section => {
     const title = section.querySelector('h4')?.textContent?.toLowerCase();
@@ -522,11 +585,11 @@ function extractRenovationAnalysis(content: Element) {
       .filter((text): text is string => text !== null && text !== undefined);
     
     if (title?.includes('cost')) {
-      data.estimated_costs = text;
+      data.estimated_costs = text || '';
     } else if (title?.includes('improvement')) {
       data.priority_improvements = items;
     } else if (title?.includes('roi')) {
-      data.renovation_roi = text;
+      data.renovation_roi = text || '';
     }
   });
   
@@ -535,7 +598,11 @@ function extractRenovationAnalysis(content: Element) {
 
 function extractInvestmentRecommendation(content: Element) {
   const sections = content.querySelectorAll('div');
-  const data: any = {};
+  const data: InvestmentRecommendation = {
+    recommendation: '',
+    ideal_buyer: '',
+    timeline: '',
+  };
   
   sections.forEach(section => {
     const title = section.querySelector('h4')?.textContent?.toLowerCase();
@@ -543,11 +610,11 @@ function extractInvestmentRecommendation(content: Element) {
     
     if (title?.includes('recommendation')) {
       const badge = section.querySelector('[class*="badge"]');
-      data.recommendation = badge?.textContent?.trim() || text;
+      data.recommendation = badge?.textContent?.trim() || text || '';
     } else if (title?.includes('buyer')) {
-      data.ideal_buyer = text;
+      data.ideal_buyer = text || '';
     } else if (title?.includes('timeline')) {
-      data.timeline = text;
+      data.timeline = text || '';
     }
   });
   

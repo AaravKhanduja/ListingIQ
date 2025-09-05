@@ -54,7 +54,7 @@ export function SignUpForm() {
 
       // Show success message instead of redirecting immediately
       setError('Check your email for a confirmation link!');
-    } catch (error) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);

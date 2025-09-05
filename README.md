@@ -1,467 +1,650 @@
-# 🧠 ListingIQ
+# ListingIQ 🏠
 
-**AI-powered real estate listing analysis.**  
-Upload a property listing or paste its text — get intelligent insights, flags, and follow-up questions in seconds.
+**AI-powered insights for real estate listings with comprehensive market analysis and investment recommendations.**
 
-> Built with Next.js 15 (App Router), FastAPI, GPT-4, Tailwind, and Supabase.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
+[![Node.js 18+](https://img.shields.io/badge/node.js-18+-green.svg)](https://nodejs.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-blue.svg)](https://fastapi.tiangolo.com/)
+[![Next.js](https://img.shields.io/badge/Next.js-15+-black.svg)](https://nextjs.org/)
 
-**🔑 Required API Keys:**
+## ✨ Features
 
-- **OpenAI API Key** (Required) - For AI analysis generation
-- **RapidAPI Key** (Optional) - For real Zillow property data (without this, realistic mock data is used)
+- **🤖 AI-Powered Analysis**: Comprehensive property analysis using advanced LLMs
+- **🔐 Secure Authentication**: JWT-based auth with Supabase integration
+- **📊 Market Insights**: Detailed market trends, comparables, and investment potential
+- **💰 Investment Analysis**: ROI projections, cash flow analysis, and risk assessment
+- **🏗️ Renovation Planning**: Cost estimates and priority improvement recommendations
+- **📱 Modern UI**: Beautiful, responsive interface built with Next.js and shadcn/ui
+- **🚀 Production Ready**: Enterprise-grade security, monitoring, and scalability
 
----
+## 🏗️ Architecture
 
-## 🧩 Features
-
-| Feature                    | Description                                                         | Status     |
-| -------------------------- | ------------------------------------------------------------------- | ---------- |
-| 📝 Paste or Upload Listing | Large textarea input or address search                              | ✅ Done    |
-| 🤖 Insight Generator       | Multi-step GPT prompt chain: extract → analyze → generate           | ✅ Done    |
-| 💡 Insights UI             | Renders 4 sections: Strengths, Weaknesses, Hidden Issues, Questions | ✅ Done    |
-| 🔐 Auth (Supabase)         | Email/password login, secure listing access                         | 🔄 Planned |
-| 💾 Save to Dashboard       | Store analyzed listings and revisit later                           | ✅ Done    |
-| 📤 Export Report           | Export insights as PDF                                              | ✅ Done    |
-| 🧪 Tests                   | Unit & integration tests for GPT logic and auth                     | 🔄 Planned |
-| 🐳 Docker Support          | Production-ready containerization                                   | ✅ Done    |
-| 🗄 Database Integration     | Supabase PostgreSQL with local fallback                             | ✅ Done    |
-
----
-
-## 🏗 Tech Stack
-
-### Frontend
-
-- **Framework:** [Next.js 15 (App Router)](https://nextjs.org/docs/app)
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS, [shadcn/ui](https://ui.shadcn.com)
-- **PDF Export:** jsPDF for report generation
-- **State Management:** React hooks with localStorage
-
-### Backend
-
-- **Framework:** [FastAPI](https://fastapi.tiangolo.com/)
-- **AI:** OpenAI GPT-4 with v1.0 API
-- **Database:** Supabase PostgreSQL with local JSON fallback
-- **Security:** Environment variable–based secrets
-- **Containerization:** Docker with multi-stage builds
-
----
+```
+ListingIQ/
+├── backend/                 # FastAPI backend
+│   ├── app/
+│   │   ├── middleware/     # Auth, rate limiting, validation
+│   │   ├── models/         # Pydantic data models
+│   │   ├── routers/        # API endpoints
+│   │   ├── services/       # Business logic
+│   │   └── config.py       # Configuration management
+│   ├── Dockerfile          # Production container
+│   └── pyproject.toml      # Python dependencies
+├── frontend/               # Next.js frontend
+│   ├── app/                # App router pages
+│   ├── components/         # Reusable UI components
+│   ├── lib/                # Utilities and services
+│   └── next.config.ts      # Next.js configuration
+└── scripts/                # Development and deployment scripts
+```
 
 ## 🚀 Quick Start
 
-### Option 1: Docker Compose (Recommended)
-
-````bash
-# Clone the repo
-git clone https://github.com/yourusername/listingiq.git
-cd listingiq
-
-# Set up environment variables
-cp backend/env.example backend/.env
-cp frontend/env.example frontend/.env.local
-
-# Add your OpenAI API key to backend/.env
-echo "OPENAI_API_KEY=your_openai_api_key_here" >> backend/.env
-
-# Optional: Add RapidAPI key for real Zillow data (mock data used if not provided)
-echo "RAPIDAPI_KEY=your_rapidapi_key_here" >> backend/.env
-
-# Start the entire stack
-docker-compose up
-
-Visit http://localhost:3000 to see the app!
-
-### Option 2: Manual Setup
-
-```bash
-# Clone the repo
-git clone https://github.com/yourusername/listingiq.git
-cd listingiq
-
-# Frontend setup
-cd frontend
-cp .env.example .env.local
-npm install
-npm run dev
-
-# Backend setup (in another terminal)
-cd ../backend
-cp .env.example .env
-# Add your OpenAI API key to .env
-# Optional: Add RapidAPI key for real Zillow data (mock data used if not provided)
-poetry install
-poetry run uvicorn app.main:app --reload
-
----
-
-## 🔧 Development
-
 ### Prerequisites
 
-- Node.js 18+
-- Python 3.11+
-- Poetry (for Python dependency management)
-- OpenAI API key
+- **Python 3.13+** (3.12+ supported)
+- **Node.js 18+**
+- **Poetry** (recommended) or pip
+- **Ollama** (for local LLM) or OpenAI API key
 
-### Environment Variables
-
-**Backend (.env):**
+### 1. Clone and Setup
 
 ```bash
-OPENAI_API_KEY=your_openai_api_key_here
-RAPIDAPI_KEY=your_rapidapi_key_here  # Optional - for real Zillow data (mock data used if not provided)
-SUPABASE_URL=your_supabase_project_url  # Optional
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key  # Optional
-FRONTEND_ORIGIN=http://localhost:3000
-````
+git clone https://github.com/yourusername/listing-iq.git
+cd listing-iq
 
-**Frontend (.env.local):**
-
-```bash
-NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url  # Optional
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key  # Optional
-```
-
-### Development Scripts
-
-```bash
-# Run development setup script
-./scripts/dev-setup.sh
-
-# Start backend with hot reload
-cd backend && poetry run uvicorn app.main:app --reload
-
-# Start frontend with hot reload
-cd frontend && npm run dev
-
-# Run tests (when implemented)
-cd backend && poetry run pytest
-cd frontend && npm run test
-```
-
----
-
-## 🐳 Production Deployment
-
-### Docker Deployment
-
-```bash
-# Build and run with Docker Compose
-docker-compose -f docker-compose.prod.yml up -d
-
-# Or build individual containers
-docker build -t listingiq-backend ./backend
-docker build -t listingiq-frontend ./frontend
-```
-
-### Manual Deployment
-
-**Backend (Railway/Render/AWS):**
-
-```bash
-cd backend
-poetry install --no-dev
-poetry run uvicorn app.main:app --host 0.0.0.0 --port $PORT
-```
-
-**Frontend (Vercel/Netlify):**
-
-```bash
-cd frontend
-npm run build
-npm start
-```
-
----
-
-## 🗄 Database Setup
-
-### Supabase (Production)
-
-1. Create a Supabase project
-2. Run the schema: `supabase-schema.sql`
-3. Add environment variables to your deployment
-
-### Local Development
-
-The app works without Supabase using local JSON storage. Data is saved to `backend/local_analyses.json`.
-
----
-
-## 🧹 Code Quality
-
-**Backend**
-
-- Linting & Formatting: [Ruff](https://docs.astral.sh/ruff) (includes Black)
-- Pre-commit hooks: Enforced via pre-commit (`pre-commit run --all-files`)
-- Type Safety: Pydantic models with comprehensive validation
-
-**Frontend**
-
-- Formatting: [Prettier](https://prettier.io)
-- Pre-commit hooks: Managed by [Husky](https://typicode.github.io/husky)
-- Type Safety: TypeScript with strict configuration
-
----
-
-## 🧪 Testing
-
-### Backend Tests
-
-```bash
-cd backend
-poetry run pytest
-
-# Run with coverage
-poetry run pytest --cov=app
-
-# Run specific test
-poetry run pytest tests/test_analyze.py::test_analyze_property
-```
-
-### Frontend Tests
-
-```bash
-cd frontend
-npm run test
-
-# Run with coverage
-npm run test:coverage
-```
-
----
-
-## 🔧 Development Guide
-
-### Prerequisites
-
-- **Node.js 18+** - [Download](https://nodejs.org/)
-- **Python 3.11+** - [Download](https://python.org/)
-- **Poetry** - [Install](https://python-poetry.org/docs/#installation)
-- **Docker** (optional) - [Download](https://docker.com/)
-
-### One-Command Setup
-
-```bash
-# Clone and setup everything
-git clone https://github.com/yourusername/listingiq.git
-cd listingiq
+# Run the setup script
+chmod +x scripts/dev-setup.sh
 ./scripts/dev-setup.sh
 ```
 
-### Manual Setup
+### 2. Configure Environment
 
 ```bash
-# 1. Environment setup
+# Backend (Development)
 cp backend/env.example backend/.env
+# Edit backend/.env with your API keys
+
+# Backend (Production)
+cp backend/env.production.example backend/.env
+# Edit backend/.env with your production values
+
+# Frontend (Development)
 cp frontend/env.example frontend/.env.local
+# Edit frontend/.env.local with your configuration
 
-# 2. Add your OpenAI API key
-echo "OPENAI_API_KEY=your_key_here" >> backend/.env
+# Frontend (Production)
+cp frontend/env.production.example frontend/.env.local
+# Edit frontend/.env.local with your production values
+```
 
-# 3. Install dependencies
-cd backend && poetry install
-cd ../frontend && npm install
+### 3. Start Development Environment
 
-# 4. Start development servers
+```bash
 # Terminal 1: Backend
 cd backend && poetry run uvicorn app.main:app --reload
 
 # Terminal 2: Frontend
 cd frontend && npm run dev
+
+# Terminal 3: Ollama (if using local LLM)
+ollama serve
 ```
 
-### Development Workflow
+### 4. Access the Application
 
-#### Backend Development
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000
+- **API Documentation**: http://localhost:8000/docs
+- **Health Check**: http://localhost:8000/health
+
+## 🔧 Development
+
+### Available Commands
 
 ```bash
+# Development
+./scripts/dev-setup.sh            # Setup development environment
+
+# Backend
 cd backend
+poetry install                     # Install dependencies
+poetry run uvicorn app.main:app --reload  # Start with auto-reload
+poetry run pytest                 # Run tests
+poetry run black .                # Format code
+poetry run ruff check .           # Lint code
 
-# Start development server
-poetry run uvicorn app.main:app --reload
-
-# Run tests
-poetry run pytest
-
-# Format code
-poetry run black .
-poetry run ruff check --fix .
-
-# Install new dependencies
-poetry add package-name
-```
-
-#### Frontend Development
-
-```bash
+# Frontend
 cd frontend
-
-# Start development server
-npm run dev
-
-# Run tests
-npm run test
-
-# Format code
-npm run lint
-npm run format
-
-# Install new dependencies
-npm install package-name
+npm install                       # Install dependencies
+npm run dev                       # Start development server
+npm run build                     # Build for production
+npm run type-check               # TypeScript check
 ```
 
-### Database Development
+### Development URLs
 
-**Local Development (No Supabase needed):**
+- **Frontend**: http://localhost:3000
+- **Backend**: http://localhost:8000
+- **API Docs**: http://localhost:8000/docs
+- **Health Check**: http://localhost:8000/health
 
-- Data is stored in `backend/local_analyses.json`
-- No setup required
-- Works out of the box
+### Troubleshooting
 
-**Zillow Integration:**
-
-- **Without RapidAPI Key**: Uses realistic mock data for development
-- **With RapidAPI Key**: Fetches real property data from Zillow
-- Add `RAPIDAPI_KEY=your_key` to backend `.env` for real data
-- Get RapidAPI key from [Zillow API](https://rapidapi.com/3b-data-3b-data-default/api/zillow-com1/)
-- **Note**: The app will return mock data if no RapidAPI key is provided, ensuring it works out of the box
-
-**Production (Supabase):**
-
-1. Create Supabase project
-2. Run `supabase-schema.sql`
-3. Add environment variables
-
-### Docker Development
-
-```bash
-# Start entire stack
-docker-compose up
-
-# Rebuild containers
-docker-compose up --build
-
-# View logs
-docker-compose logs -f backend
-docker-compose logs -f frontend
-```
-
-### Debugging
-
-#### Backend Debugging
-
-```bash
-# Enable debug logging
-export DEBUG=true
-
-# Check API endpoints
-curl http://localhost:8000/docs
-
-# Test specific endpoint
-curl -X POST http://localhost:8000/api/analyze \
-  -H "Content-Type: application/json" \
-  -d '{"property_address": "123 Test St"}'
-```
-
-#### Frontend Debugging
-
-```bash
-# Check browser console for API calls
-# Look for "🔍 Making API call with:" logs
-
-# Clear localStorage
-localStorage.clear()
-
-# Check network tab for API requests
-```
-
-### Code Style
-
-#### Backend (Python)
-
-- **Formatter:** Black
-- **Linter:** Ruff
-- **Type Checking:** Pydantic models
-- **Pre-commit:** Automatic formatting
-
-#### Frontend (TypeScript)
-
-- **Formatter:** Prettier
-- **Linter:** ESLint
-- **Type Checking:** TypeScript strict mode
-- **Pre-commit:** Husky hooks
-
-### Common Issues
-
-#### Backend Issues
-
-**OpenAI API Error:**
-
-```bash
-# Check API key
-echo $OPENAI_API_KEY
-
-# Test API call
-curl https://api.openai.com/v1/models \
-  -H "Authorization: Bearer $OPENAI_API_KEY"
-```
-
-**Port Already in Use:**
+**Port already in use:**
 
 ```bash
 # Kill process on port 8000
 lsof -ti:8000 | xargs kill -9
+
+# Kill process on port 3000
+lsof -ti:3000 | xargs kill -9
 ```
 
-#### Frontend Issues
-
-**API Connection Error:**
+**Poetry not found:**
 
 ```bash
-# Check backend is running
-curl http://localhost:8000/docs
-
-# Check CORS settings
-curl -H "Origin: http://localhost:3000" \
-  http://localhost:8000/api/analyses
+# Install Poetry
+curl -sSL https://install.python-poetry.org | python3 -
 ```
 
-**Build Errors:**
+**Docker build fails:**
 
 ```bash
-# Clear Next.js cache
-rm -rf frontend/.next
-npm run dev
+# Make sure you're in the backend directory
+cd backend
+ls Dockerfile                    # Should show the Dockerfile
+docker build -t listingiq-backend .
 ```
 
+### Environment Variables
+
+#### Backend (.env)
+
+```bash
+# Environment
+ENVIRONMENT=development
+DEBUG=true
+
+# LLM Configuration
+LLM_PROVIDER=ollama              # ollama or openai
+OPENAI_API_KEY=your_key_here     # Required if using OpenAI
+OLLAMA_MODEL=llama3.2:3b        # Local model
+
+# Supabase (Optional for development)
+SUPABASE_URL=your_url
+SUPABASE_SERVICE_KEY=your_key
+SUPABASE_ANON_KEY=your_key
+SUPABASE_JWT_SECRET=your_secret
+
+# Database
+DATABASE_URL=sqlite:///./local_analyses.db
+```
+
+#### Frontend (.env.local)
+
+```bash
+# Backend API
+NEXT_PUBLIC_API_URL=http://localhost:8000
+
+# Supabase (Optional)
+NEXT_PUBLIC_SUPABASE_URL=your_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key
+
+# Environment
+NODE_ENV=development
+```
+
+## 🚀 Production Deployment
+
+### 1. Install Docker (if not installed)
+
+**macOS:**
+
+```bash
+brew install --cask docker
+```
+
+**Linux (Ubuntu/Debian):**
+
+```bash
+sudo apt-get update
+sudo apt-get install docker.io
+sudo usermod -aG docker $USER
+# Log out and back in
+```
+
+**Windows:**
+
+```bash
+# Download from https://www.docker.com/products/docker-desktop
+```
+
+**Test Docker:**
+
+```bash
+docker --version
+docker run hello-world
+```
+
+**Start Docker Daemon (if not running):**
+
+**macOS:**
+
+```bash
+# Start Docker Desktop app, or from terminal:
+open -a Docker
+# Wait for Docker to start (check system tray)
+```
+
+**Linux:**
+
+```bash
+# Start Docker service
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# Check status
+sudo systemctl status docker
+```
+
+**Windows:**
+
+```bash
+# Start Docker Desktop from Start Menu
+# Or run: "Docker Desktop" from Run dialog
+```
+
+### 2. Environment Configuration
+
+**Create production environment file:**
+
+```bash
+# Copy the production template
+cp backend/env.production.example backend/.env
+
+# Edit with your production values
+nano backend/.env
+```
+
+**Required production settings:**
+
+```bash
+# Environment
+ENVIRONMENT=production
+DEBUG=false
+
+# Security (CHANGE THESE!)
+SECRET_KEY=your-super-secret-key-change-this
+REQUIRE_HTTPS=true
+SECURE_COOKIES=true
+CSRF_PROTECTION=true
+
+# CORS & Domains
+FRONTEND_ORIGIN=https://yourdomain.com
+ALLOWED_HOSTS=["yourdomain.com", "api.yourdomain.com"]
+
+# Rate Limiting
+RATE_LIMIT_PER_MINUTE=60
+
+# Database (Use PostgreSQL in production)
+DATABASE_URL=postgresql://user:password@host:port/database
+
+# Supabase
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_KEY=your-service-key
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_JWT_SECRET=your-jwt-secret
+
+# LLM (Use OpenAI for production)
+LLM_PROVIDER=openai
+OPENAI_API_KEY=your-openai-key
+OPENAI_MODEL=gpt-4
+
+# Logging & Monitoring
+LOG_LEVEL=INFO
+LOG_FORMAT=json
+ENABLE_METRICS=true
+ENABLE_HEALTH_CHECKS=true
+```
+
+### 2. Backend Deployment
+
+```bash
+# Option 1: Docker (Recommended for production)
+cd backend                                    # ← IMPORTANT: Must be in backend directory
+docker build -t listingiq-backend .
+docker run -d -p 8000:8000 \
+  -e ENVIRONMENT=production \
+  -e SUPABASE_URL=$SUPABASE_URL \
+  listingiq-backend
+
+# Option 2: Direct deployment (if Docker not available)
+poetry install --only=main
+poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+```
+
+**Note**: Docker is only needed for production deployment. For development, use the direct commands in the Development section.
+
+### 3. Test Production Build
+
+```bash
+# Build and test locally
+cd backend                                    # ← IMPORTANT: Must be in backend directory
+docker build -t listingiq-backend .
+docker run -d -p 8000:8000 \
+  -e ENVIRONMENT=production \
+  -e DEBUG=false \
+  listingiq-backend
+
+# Test the API
+curl http://localhost:8000/health
+
+# Stop and cleanup
+docker stop $(docker ps -q)
+docker rm $(docker ps -aq)
+docker rmi listingiq-backend
+```
+
+### 4. Frontend Deployment
+
+```bash
+# Option 1: Docker (Recommended for production)
+cd frontend
+docker build -t listingiq-frontend .
+docker run -d -p 3000:3000 \
+  -e NODE_ENV=production \
+  -e NEXT_PUBLIC_API_URL=https://api.yourdomain.com \
+  listingiq-frontend
+
+# Option 2: Direct deployment
+cd frontend
+npm run build
+npm start
+
+# Option 3: Deploy to Vercel/Netlify
+npm run build
+# Deploy the .next folder
+```
+
+**Environment Variables for Frontend:**
+
+```bash
+# Copy production template
+cp frontend/env.production.example frontend/.env.local
+
+# Required variables:
+NODE_ENV=production
+NEXT_PUBLIC_API_URL=https://api.yourdomain.com
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-production-anon-key
+```
+
+### 5. Production Features
+
+#### 🔒 Security Features
+
+- **Rate Limiting**: 60 requests/minute per IP (configurable)
+- **Security Headers**: HSTS, CSP, XSS protection, frame options
+- **Request Validation**: SQL injection protection, size limits
+- **CORS Protection**: Configurable origins for production
+- **Trusted Hosts**: Prevents host header attacks
+- **Non-root Container**: Runs as `appuser` for security
+
+#### 📊 Monitoring & Observability
+
+- **Health Checks**: `/health` endpoint for load balancers
+- **Metrics**: `/metrics` endpoint with system stats
+- **Structured Logging**: JSON logs in production
+- **Request Tracking**: All requests logged with timing
+- **Error Monitoring**: Comprehensive error logging
+- **Performance Metrics**: CPU, memory, disk usage
+
+#### ⚡ Performance Features
+
+- **Multi-worker**: 4 Uvicorn workers by default
+- **Request Timing**: Process time headers
+- **Optimized Builds**: Production-only dependencies
+- **Connection Pooling**: Efficient database connections
+- **Caching Ready**: Headers for CDN integration
+
+#### 🔄 Scalability & Deployment
+
+- **Docker Ready**: Production container with health checks
+- **Load Balancer Compatible**: Health check endpoints
+- **Auto-scaling Ready**: Stateless design
+- **Environment Config**: Easy configuration management
+- **Database Agnostic**: Supports PostgreSQL, MySQL, SQLite
+
+#### 🛡️ Production Security Checklist
+
+- ✅ API documentation disabled in production
+- ✅ Debug mode disabled
+- ✅ Secure headers enabled (HSTS, CSP, XSS protection)
+- ✅ Rate limiting active (60 requests/minute)
+- ✅ Request validation enabled
+- ✅ CORS properly configured
+- ✅ Non-root container user
+- ✅ Structured logging enabled
+- ✅ Health checks configured
+- ✅ Metrics endpoint available
+- ✅ Trusted hosts protection
+- ✅ Frontend security headers (CSP, HSTS, XSS protection)
+- ✅ Production environment templates provided
+- ✅ Docker health checks configured
+- ✅ Standalone Next.js output for optimal Docker builds
+
+#### 🚀 Production Deployment Checklist
+
+- ✅ Backend Docker container builds successfully
+- ✅ Frontend Docker container builds successfully
+- ✅ Both containers run with non-root users
+- ✅ Health checks pass for both services
+- ✅ Security headers present on both frontend and backend
+- ✅ Environment variables properly configured
+- ✅ Production-only dependencies installed
+- ✅ Telemetry disabled in production
+- ✅ Optimized builds with compression enabled
+- ✅ Multi-stage Docker builds for minimal image size
+
+## 🏗️ API Reference
+
+### Authentication
+
+All API endpoints require authentication via JWT token in the Authorization header:
+
+```bash
+Authorization: Bearer <your_jwt_token>
+```
+
+### Endpoints
+
+- `POST /api/analyze` - Analyze a property
+- `GET /api/analyses` - Get user analyses
+- `GET /api/analyses/{id}` - Get specific analysis
+- `DELETE /api/analyses/{id}` - Delete analysis
+- `GET /health` - Health check
+- `GET /metrics` - System metrics
+
+### Example Request
+
+```bash
+curl -X POST "http://localhost:8000/api/analyze" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "property_address": "123 Main St, City, State",
+    "property_title": "Beautiful Family Home",
+    "manual_data": {
+      "listing_description": "Spacious 3BR home with great potential",
+      "property_type": "Single Family",
+      "bedrooms": 3,
+      "bathrooms": 2,
+      "square_feet": 1800,
+      "year_built": 1995
+    }
+  }'
+```
+
+## 🔒 Security Features
+
+- **JWT Authentication** with UTC-safe expiration
+- **Rate Limiting** (60 requests/minute)
+- **Request Validation** with SQL injection protection
+- **CORS Protection** with configurable origins
+- **Trusted Host** middleware for production
+- **Non-root** Docker containers
+- **Secure Headers** (X-Frame-Options, X-Content-Type-Options)
+
+## 📊 Monitoring & Observability
+
+- **Health Checks** for load balancers
+- **Metrics Endpoint** for Prometheus
+- **Structured Logging** (JSON in production)
+- **Request Timing** headers
+- **Error Tracking** and logging
+- **Performance Monitoring** ready
+
+## 🧪 Testing
+
+```bash
+# Backend tests
+cd backend
+poetry run pytest
+
+# Frontend tests
+cd frontend
+npm test
+
+# End-to-end tests
+npm run test:e2e
+```
+
+## 🚨 Production Troubleshooting
+
+### Common Issues
+
+**Docker Build Fails:**
+
+```bash
+# Error: "failed to read dockerfile"
+# Solution: Make sure you're in the backend directory
+cd backend
+docker build -t listingiq-backend .
+```
+
+**Container Won't Start:**
+
+```bash
+# Check logs
+docker logs <container_id>
+
+# Common fixes:
+# 1. Missing environment variables
+# 2. Port already in use
+# 3. Invalid configuration
+```
+
+**Health Check Fails:**
+
+```bash
+# Test health endpoint
+curl http://localhost:8000/health
+
+# Check if container is running
+docker ps
+
+# Check container logs
+docker logs <container_id>
+```
+
+**Rate Limiting Issues:**
+
+```bash
+# Test rate limiting
+for i in {1..70}; do curl -s http://localhost:8000/health; done
+
+# Should return 429 after 60 requests
+```
+
+**Security Headers Missing:**
+
+```bash
+# Check headers
+curl -I http://localhost:8000/health
+
+# Should include security headers like:
+# X-Content-Type-Options: nosniff
+# X-Frame-Options: DENY
+# Strict-Transport-Security: max-age=31536000
+```
+
+**Environment Variables:**
+
+```bash
+# Verify environment is set correctly
+docker exec <container_id> env | grep ENVIRONMENT
+
+# Should show: ENVIRONMENT=production
+```
+
+### Performance Optimization
+
+**Increase Workers:**
+
+```bash
+# Edit Dockerfile CMD line
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "8"]
+```
+
+**Database Connection Pooling:**
+
+```bash
+# Add to .env
+DATABASE_POOL_SIZE=20
+DATABASE_MAX_OVERFLOW=30
+```
+
+**Memory Limits:**
+
+```bash
+# Run with memory limits
+docker run -d -p 8000:8000 --memory=2g --cpus=2 listingiq-backend
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Standards
+
+- **Python**: Black formatting, Ruff linting
+- **TypeScript**: ESLint, Prettier
+- **Git**: Conventional commits, pre-commit hooks
+- **Testing**: Unit tests for all critical functions
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+- **Issues**: [GitHub Issues](https://github.com/yourusername/listing-iq/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/listing-iq/discussions)
+
+## 🙏 Acknowledgments
+
+- **FastAPI** for the excellent backend framework
+- **Next.js** for the powerful frontend framework
+- **shadcn/ui** for the beautiful component library
+- **Supabase** for authentication and database services
+- **Ollama** for local LLM capabilities
+
 ---
 
-## 🧪 Contributing
-
-1. Fork the repository.
-2. Create your feature branch: `git checkout -b feature/amazing-thing`
-3. Commit your changes with conventional commits.
-4. Push to the branch: `git push origin feature/amazing-thing`
-5. Open a pull request 🚀
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for more details.
-
----
-
-## 📚 Resources
-
-- [Next.js Documentation](https://nextjs.org/docs)
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [OpenAI API Documentation](https://platform.openai.com/docs)
-- [Supabase Documentation](https://supabase.com/docs)
-- [Tailwind CSS](https://tailwindcss.com/docs)
-- [shadcn/ui](https://ui.shadcn.com/)
-
----
-
-## 📄 License
-
-MIT License. See [LICENSE](LICENSE) for more information.
+**Built with ❤️ for real estate professionals and investors**

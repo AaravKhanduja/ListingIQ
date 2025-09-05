@@ -1,6 +1,5 @@
-"use client";
+'use client';
 
-import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 
 interface LoadingStateProps {
@@ -9,11 +8,11 @@ interface LoadingStateProps {
 
 export function LoadingState({ analysisProgress }: LoadingStateProps) {
   const getProgressMessage = (progress: number) => {
-    if (progress < 20) return "Fetching property data...";
-    if (progress < 40) return "Analyzing listing details...";
-    if (progress < 70) return "Identifying potential risks...";
-    if (progress < 90) return "Generating insights...";
-    return "Analysis complete!";
+    if (progress < 20) return 'Fetching property data...';
+    if (progress < 40) return 'Analyzing listing details...';
+    if (progress < 70) return 'Identifying potential risks...';
+    if (progress < 90) return 'Generating insights...';
+    return 'Analysis complete!';
   };
 
   // Custom loading animation component
@@ -36,7 +35,7 @@ export function LoadingState({ analysisProgress }: LoadingStateProps) {
             <h2 className="text-2xl font-bold text-black mb-2">Analyzing Property</h2>
             <p className="text-slate-600">{getProgressMessage(analysisProgress)}</p>
           </div>
-          
+
           <div className="space-y-3">
             <Progress value={analysisProgress} className="w-full" />
             <p className="text-sm text-slate-500">{analysisProgress}% complete</p>

@@ -9,10 +9,9 @@ import { downloadTextPDF } from '@/lib/pdf-utils';
 interface ListingHeaderProps {
   propertyTitle: string;
   summary: string;
-  propertyId: string;
 }
 
-export function ListingHeader({ propertyTitle, summary, propertyId }: ListingHeaderProps) {
+export function ListingHeader({ propertyTitle, summary }: ListingHeaderProps) {
   const [isDownloading, setIsDownloading] = useState(false);
 
   const handleDownloadPDF = async () => {
