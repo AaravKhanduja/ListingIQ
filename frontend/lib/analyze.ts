@@ -103,12 +103,22 @@ const API_BASE =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") ||
   "http://localhost:8000";
 
-// Temporary debug logging
+// Temporary debug logging - multiple approaches
 console.log('🔧 Environment check:', {
   NODE_ENV: process.env.NODE_ENV,
   NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   API_BASE: API_BASE
 });
+
+// Also log to window for easier access
+if (typeof window !== 'undefined') {
+  (window as any).debugEnv = {
+    NODE_ENV: process.env.NODE_ENV,
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    API_BASE: API_BASE
+  };
+  console.log('🔧 Window debug object set:', (window as any).debugEnv);
+}
 
 // Epoch helpers (UTC by definition)
 const nowEpochSec = () => Math.floor(Date.now() / 1000);

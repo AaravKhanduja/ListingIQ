@@ -15,6 +15,12 @@ export default function HomePage() {
   const router = useRouter();
 
   useEffect(() => {
+    // Debug environment variables
+    console.log('🔧 PAGE Environment check:', {
+      NODE_ENV: process.env.NODE_ENV,
+      NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    });
+    
     if (!loading && !user) {
       router.push('/auth/signin');
     }
