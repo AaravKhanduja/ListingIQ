@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { User } from '@supabase/supabase-js';
-import { supabase } from './supabase/client';
 
 interface AuthContextType {
   user: User | null;
@@ -15,138 +14,248 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Development mode user type
+interface DevUser {
+  id: string;
+  email: string;
+  user_metadata?: { name?: string };
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Check if we're in development mode
+  const isDevMode = process.env.NODE_ENV === 'development';
+
   useEffect(() => {
-    // Check for existing session
-    const checkSession = async () => {
-      try {
-        if (supabase) {
-          const {
-            data: { session },
-          } = await supabase.auth.getSession();
-          if (session?.user) {
-            console.log('Auth: Session found, setting user:', session.user.email);
-            setUser(session.user);
-          } else {
-            console.log('Auth: No session found');
-          }
+    if (isDevMode) {
+      // Development mode: use localStorage
+      const devUser = localStorage.getItem('dev-user');
+      if (devUser) {
+        try {
+          const parsedUser = JSON.parse(devUser) as DevUser;
+          setUser(parsedUser as User);
+        } catch {
+          localStorage.removeItem('dev-user');
         }
-      } catch (error) {
-        console.error('Error checking session:', error);
-      } finally {
+      }
+      setLoading(false);
+    } else {
+      // Production mode: check for existing session
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+      if (supabaseUrl && supabaseKey) {
+        // Use Supabase to check session
+        const checkSession = async () => {
+          try {
+            const { getCurrentUser } = await import('@/lib/supabase/auth');
+            const user = await getCurrentUser();
+            if (user) {
+              setUser(user);
+            }
+          } catch (error) {
+            console.error('Error checking session:', error);
+          } finally {
+            setLoading(false);
+          }
+        };
+        checkSession();
+
+        // Set up auth state change listener
+        const setupAuthListener = async () => {
+          try {
+            const { onAuthStateChange } = await import('@/lib/supabase/auth');
+            const { data } = onAuthStateChange((user: User | null) => {
+              console.log('Auth state change:', user?.email);
+              setUser(user);
+            });
+            return data;
+          } catch (error) {
+            console.error('Error setting up auth listener:', error);
+          }
+        };
+
+        const authListener = setupAuthListener();
+
+        // Cleanup function
+        return () => {
+          if (authListener) {
+            authListener.then((data) => {
+              if (data?.subscription) {
+                data.subscription.unsubscribe();
+              }
+            });
+          }
+        };
+      } else {
+        // No Supabase configured, just set loading to false
         setLoading(false);
       }
-    };
+    }
+  }, [isDevMode]);
 
-    checkSession();
+  const signIn = useCallback(
+    async (email: string, password: string) => {
+      if (isDevMode) {
+        // Development mode: simulate successful login
+        const devUser: DevUser = {
+          id: 'dev-user-' + Date.now(),
+          email,
+          user_metadata: { name: email.split('@')[0] },
+        };
+        localStorage.setItem('dev-user', JSON.stringify(devUser));
+        setUser(devUser as User);
+        return { error: null };
+      }
 
-    // Listen for auth changes
-    if (supabase) {
-      const {
-        data: { subscription },
-      } = supabase.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
-          setUser(session.user);
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null);
+      // Production mode: use Supabase if configured, otherwise redirect
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+      if (supabaseUrl && supabaseKey) {
+        try {
+          // Use Supabase auth
+          const { signInWithEmail } = await import('@/lib/supabase/auth');
+          const { error } = await signInWithEmail(email, password);
+          if (error) {
+            return { error };
+          }
+          // Don't set user here - the auth state listener will handle it
+          return { error: null };
+        } catch (error) {
+          console.error('Signin error:', error);
+          return { error: new Error('Signin failed') };
         }
-      });
-
-      return () => subscription.unsubscribe();
-    }
-  }, []);
-
-  const signIn = useCallback(async (email: string, password: string) => {
-    try {
-      if (!supabase) {
-        return { error: new Error('Supabase not configured') };
+      } else {
+        // No Supabase configured, redirect to signin page
+        window.location.href = '/auth/signin';
+        return { error: null };
       }
+    },
+    [isDevMode]
+  );
 
-      console.log('Auth: Attempting sign in for:', email);
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        console.log('Auth: Sign in error:', error.message);
-        return { error };
-      }
-
-      if (data.user) {
-        console.log('Auth: Sign in successful, setting user:', data.user.email);
-        setUser(data.user);
+  const signUp = useCallback(
+    async (email: string, password: string) => {
+      if (isDevMode) {
+        // Development mode: simulate successful signup
+        const devUser: DevUser = {
+          id: 'dev-user-' + Date.now(),
+          email,
+          user_metadata: { name: email.split('@')[0] },
+        };
+        localStorage.setItem('dev-user', JSON.stringify(devUser));
+        setUser(devUser as User);
         return { error: null };
       }
 
-      return { error: new Error('Sign in failed') };
-    } catch (error: any) {
-      return { error: error instanceof Error ? error : new Error('Sign in failed') };
-    }
-  }, []);
+      // Production mode: use Supabase if configured, otherwise redirect
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  const signUp = useCallback(async (email: string, password: string) => {
-    try {
-      if (!supabase) {
-        return { error: new Error('Supabase not configured') };
-      }
-
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-
-      if (error) {
-        return { error };
-      }
-
-      if (data.user) {
-        setUser(data.user);
+      if (supabaseUrl && supabaseKey) {
+        try {
+          // Use Supabase auth
+          const { signUpWithEmail } = await import('@/lib/supabase/auth');
+          const { user, error } = await signUpWithEmail(email, password);
+          if (error) {
+            return { error };
+          }
+          if (user) {
+            setUser(user);
+          }
+          return { error: null };
+        } catch (error) {
+          console.error('Signup error:', error);
+          return { error: new Error('Signup failed') };
+        }
+      } else {
+        // No Supabase configured, redirect to signup page
+        window.location.href = '/auth/signup';
         return { error: null };
       }
-
-      return { error: new Error('Sign up failed') };
-    } catch (error: any) {
-      return { error: error instanceof Error ? error : new Error('Sign up failed') };
-    }
-  }, []);
+    },
+    [isDevMode]
+  );
 
   const signInWithGoogle = useCallback(async () => {
-    try {
-      if (!supabase) {
-        return { error: new Error('Supabase not configured') };
-      }
-
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-
-      if (error) {
-        return { error };
-      }
-
+    if (isDevMode) {
+      // Development mode: simulate Google login
+      const devUser: DevUser = {
+        id: 'dev-user-' + Date.now(),
+        email: 'dev-user@example.com',
+        user_metadata: { name: 'Dev User' },
+      };
+      localStorage.setItem('dev-user', JSON.stringify(devUser));
+      setUser(devUser as User);
       return { error: null };
-    } catch (error: any) {
-      return { error: error instanceof Error ? error : new Error('Google sign in failed') };
     }
-  }, []);
+
+    // Production mode: use Supabase if configured, otherwise redirect
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (supabaseUrl && supabaseKey) {
+      try {
+        // Use Supabase auth
+        const { signInWithGoogle } = await import('@/lib/supabase/auth');
+        const { error } = await signInWithGoogle();
+        if (error) {
+          return { error };
+        }
+        // For OAuth, we need to wait for the redirect and then check the session
+        // The user state will be updated when the page reloads
+        return { error: null };
+      } catch (error) {
+        console.error('Google signin error:', error);
+        return { error: new Error('Google signin failed') };
+      }
+    } else {
+      // No Supabase configured, redirect to signin page
+      window.location.href = '/auth/signin';
+      return { error: null };
+    }
+  }, [isDevMode]);
 
   const signOut = useCallback(async () => {
-    try {
-      if (supabase) {
-        await supabase.auth.signOut();
-      }
+    if (isDevMode) {
+      // Development mode: clear localStorage
+      localStorage.removeItem('dev-user');
       setUser(null);
-    } catch (error) {
-      console.error('Sign out error:', error);
+      // Redirect to signin page
+      window.location.href = '/auth/signin';
+      return;
     }
-  }, []);
+
+    // Production mode: use Supabase if configured, otherwise redirect
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (supabaseUrl && supabaseKey) {
+      try {
+        // Use Supabase auth
+        const { signOut: supabaseSignOut } = await import('@/lib/supabase/auth');
+        const { error } = await supabaseSignOut();
+        if (error) {
+          console.error('Signout error:', error);
+        }
+        // Clear user state regardless of error
+        setUser(null);
+        // Redirect to signin page
+        window.location.href = '/auth/signin';
+      } catch (error) {
+        console.error('Signout failed:', error);
+        // Clear user state even if signout fails
+        setUser(null);
+        window.location.href = '/auth/signin';
+      }
+    } else {
+      // No Supabase configured, redirect to signin page
+      window.location.href = '/auth/signin';
+    }
+  }, [isDevMode]);
 
   const value = {
     user,

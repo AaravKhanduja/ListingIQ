@@ -58,7 +58,6 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
   } catch (error) {
-    console.error('Supabase middleware error:', error);
     // If there's an error with Supabase, allow the request to continue
     return NextResponse.next({
       request,

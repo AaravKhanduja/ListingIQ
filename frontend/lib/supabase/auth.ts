@@ -71,6 +71,27 @@ export async function getSession() {
   return session;
 }
 
+export async function refreshUser() {
+  if (!isSupabaseConfigured()) {
+    return { error: new Error('Supabase is not configured') };
+  }
+
+  try {
+    const { data, error } = await supabase!.auth.refreshSession();
+    if (error) {
+      return { error };
+    }
+    
+    if (data.session) {
+      return { error: null };
+    } else {
+      return { error: new Error('No session after refresh') };
+    }
+  } catch (error) {
+    return { error: new Error('Token refresh failed') };
+  }
+}
+
 export function onAuthStateChange(callback: (user: User | null) => void) {
   if (!isSupabaseConfigured()) {
     // Return a dummy unsubscribe function
