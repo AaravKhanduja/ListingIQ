@@ -56,10 +56,8 @@ export async function saveAnalysisToSupabase(
   userId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log('saveAnalysisToSupabase called with:', { propertyInput, userId, supabaseConfigured: !!supabase });
     
     if (!supabase) {
-      console.error('Supabase client is null/undefined');
       return { success: false, error: 'Supabase not configured' };
     }
     
@@ -88,7 +86,6 @@ export async function saveAnalysisToSupabase(
       .maybeSingle();
 
     if (checkError && checkError.code !== 'PGRST116') {
-      console.error('Error checking for existing analysis:', checkError);
       return { success: false, error: checkError.message };
     }
 
@@ -103,7 +100,6 @@ export async function saveAnalysisToSupabase(
         .eq('id', existingAnalysis.id);
 
       if (error) {
-        console.error('Error updating analysis:', error);
         return { success: false, error: error.message };
       }
     } else {
@@ -118,15 +114,12 @@ export async function saveAnalysisToSupabase(
         });
 
           if (error) {
-      console.error('Error saving analysis:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
       return { success: false, error: error.message || 'Failed to save analysis' };
     }
     }
 
     return { success: true };
   } catch (error) {
-    console.error('Error saving analysis to Supabase:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error' 
@@ -138,10 +131,8 @@ export async function getSavedAnalysesFromSupabase(
   userId: string
 ): Promise<{ success: boolean; data?: SavedAnalysis[]; error?: string }> {
   try {
-    console.log('getSavedAnalysesFromSupabase called with:', { userId, supabaseConfigured: !!supabase });
     
     if (!supabase) {
-      console.error('Supabase client is null/undefined');
       return { success: false, error: 'Supabase not configured' };
     }
     
@@ -152,14 +143,11 @@ export async function getSavedAnalysesFromSupabase(
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching analyses:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
       return { success: false, error: error.message || 'Failed to fetch analyses' };
     }
 
     return { success: true, data: data || [] };
   } catch (error) {
-    console.error('Error fetching analyses from Supabase:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error' 
@@ -215,7 +203,6 @@ export async function isAnalysisSavedInSupabase(
 ): Promise<boolean> {
   try {
     if (!supabase) {
-      console.log('Supabase not configured, returning false');
       return false;
     }
     
@@ -228,13 +215,11 @@ export async function isAnalysisSavedInSupabase(
       .maybeSingle(); // Use maybeSingle instead of single to avoid errors when no rows found
 
     if (error) {
-      console.error('Error checking if analysis is saved:', error);
       return false;
     }
 
     return !!data;
   } catch (error) {
-    console.error('Error checking if analysis is saved in Supabase:', error);
     return false;
   }
 }

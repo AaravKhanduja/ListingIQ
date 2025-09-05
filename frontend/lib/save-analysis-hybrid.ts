@@ -44,11 +44,9 @@ export async function saveAnalysis(
   userId: string
 ): Promise<{ success: boolean; error?: string }> {
   // Only try Supabase - no fallback
-  console.log('Attempting to save analysis to Supabase...');
   const supabaseResult = await saveAnalysisToSupabase(listingData, propertyInput, userId);
   
   if (!supabaseResult.success) {
-    console.error('Supabase save failed:', supabaseResult.error);
   }
   
   return supabaseResult;
@@ -56,11 +54,9 @@ export async function saveAnalysis(
 
 export async function getSavedAnalyses(userId: string) {
   // Only try Supabase - no fallback
-  console.log('Attempting to fetch analyses from Supabase...');
   const supabaseResult = await getSavedAnalysesFromSupabase(userId);
   
   if (!supabaseResult.success) {
-    console.error('Supabase fetch failed:', supabaseResult.error);
     return supabaseResult;
   }
   
@@ -75,11 +71,9 @@ export async function getSavedAnalyses(userId: string) {
 
 export async function deleteAnalysis(analysisId: string, userId: string): Promise<{ success: boolean; error?: string }> {
   // Only try Supabase - no fallback
-  console.log('Attempting to delete analysis from Supabase...');
   const supabaseResult = await deleteAnalysisFromSupabase(analysisId, userId);
   
   if (!supabaseResult.success) {
-    console.error('Supabase delete failed:', supabaseResult.error);
   }
   
   return supabaseResult;
@@ -91,11 +85,9 @@ export async function isAnalysisSaved(
   userId: string
 ): Promise<boolean> {
   // Only try Supabase - no fallback
-  console.log('Checking if analysis is saved in Supabase...');
   const supabaseResult = await isAnalysisSavedInSupabase(propertyInput, propertyTitle, userId);
   
   if (supabaseResult === false) {
-    console.log('Analysis not found in Supabase or error occurred');
   }
   
   return supabaseResult;

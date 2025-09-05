@@ -113,7 +113,6 @@ export async function deleteAccount(userId: string): Promise<{ success: boolean;
   }
 
   try {
-    console.log('Starting delete account process for user:', userId);
     
     // Get the current session to get the access token
     const { data: { session }, error: sessionError } = await supabase!.auth.getSession();
@@ -140,14 +139,12 @@ export async function deleteAccount(userId: string): Promise<{ success: boolean;
     const result = await response.json();
     
     if (result.success) {
-      console.log('Successfully deleted user account via backend API');
       // The backend has already deleted the user account, so we just need to clear local state
       // No need to sign out since the account is already deleted
     }
 
     return result;
   } catch (error) {
-    console.error('Unexpected error in deleteAccount:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error occurred' 
