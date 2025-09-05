@@ -33,3 +33,6 @@ coverage.xml
 
 # Logs
 *.log
+
+# Local database files
+local_analyses.json
