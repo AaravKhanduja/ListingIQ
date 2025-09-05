@@ -70,8 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setUser(user);
             });
             return data;
-          } catch {
-          }
+          } catch {}
         };
 
         const authListener = setupAuthListener();

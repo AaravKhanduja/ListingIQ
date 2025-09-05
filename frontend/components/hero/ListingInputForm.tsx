@@ -65,7 +65,6 @@ export function ListingInputForm({
       localStorage.setItem('currentProperty', JSON.stringify(analysisData));
       onAnalyze();
     } else {
-      console.log('❌ Invalid input');
       if (!propertyInput.trim()) {
         setValidationError('Please provide a valid property address.');
       } else if (!(manualData.listing_description || '').trim()) {
