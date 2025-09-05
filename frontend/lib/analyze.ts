@@ -103,6 +103,13 @@ const API_BASE =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") ||
   "http://localhost:8000";
 
+// Temporary debug logging
+console.log('🔧 Environment check:', {
+  NODE_ENV: process.env.NODE_ENV,
+  NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+  API_BASE: API_BASE
+});
+
 // Epoch helpers (UTC by definition)
 const nowEpochSec = () => Math.floor(Date.now() / 1000);
 
