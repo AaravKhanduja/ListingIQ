@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
-export default function AuthCodeErrorPage() {
+function AuthCodeErrorContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
   const description = searchParams.get('description');
@@ -20,6 +21,8 @@ export default function AuthCodeErrorPage() {
         return 'No authorization code was provided. Please try signing in again.';
       case 'unexpected':
         return 'An unexpected error occurred during authentication.';
+      case 'not_authenticated':
+        return 'Authentication failed. Please try signing in again.';
       default:
         return 'There was an error during the authentication process.';
     }
@@ -54,5 +57,22 @@ export default function AuthCodeErrorPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function AuthCodeErrorPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <h1 className="text-2xl font-bold text-red-600">Authentication Error</h1>
+            <p className="text-gray-600 mt-2">Loading...</p>
+          </CardHeader>
+        </Card>
+      </div>
+    }>
+      <AuthCodeErrorContent />
+    </Suspense>
   );
 }
