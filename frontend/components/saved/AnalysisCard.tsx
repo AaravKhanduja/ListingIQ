@@ -15,9 +15,10 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Calendar, Eye, Download, Trash2, MapPin } from 'lucide-react';
+import Link from 'next/link';
 
 interface SavedAnalysis {
-  id: number;
+  id: string;
   date: string;
   title: string;
   propertyInput: string;
@@ -32,7 +33,7 @@ interface SavedAnalysis {
 
 interface AnalysisCardProps {
   analysis: SavedAnalysis;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
   getScoreColor: (score: number) => string;
   formatDate: (dateString: string) => string;
   getTimeAgo: (dateString: string) => string;
@@ -78,10 +79,12 @@ export function AnalysisCard({
 
         {/* Action buttons */}
         <div className="flex items-center justify-end space-x-2">
-          <Button variant="outline" size="sm">
-            <Eye className="h-4 w-4 mr-2" />
-            View
-          </Button>
+          <Link href={`/listing/${encodeURIComponent(analysis.propertyInput)}`}>
+            <Button variant="outline" size="sm">
+              <Eye className="h-4 w-4 mr-2" />
+              View
+            </Button>
+          </Link>
           <Button variant="outline" size="sm">
             <Download className="h-4 w-4 mr-2" />
             Export

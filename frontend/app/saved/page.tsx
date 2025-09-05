@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { useAuth } from '@/lib/auth';
+import { getSavedAnalyses, deleteAnalysis } from '@/lib/save-analysis-hybrid';
 import {
   StatsCards,
   SearchBar,
@@ -16,7 +18,7 @@ import {
 } from '@/components/saved';
 
 interface SavedAnalysis {
-  id: number;
+  id: string;
   date: string;
   title: string;
   propertyInput: string;
@@ -30,20 +32,26 @@ interface SavedAnalysis {
 }
 
 export default function SavedPage() {
+  const { user } = useAuth();
   const [analyses, setAnalyses] = useState<SavedAnalysis[]>([]);
   const [filteredAnalyses, setFilteredAnalyses] = useState<SavedAnalysis[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const savedAnalyses = localStorage.getItem('savedAnalyses');
-    if (savedAnalyses) {
-      const parsed = JSON.parse(savedAnalyses);
-      setAnalyses(parsed);
-      setFilteredAnalyses(parsed);
-    }
-    setIsLoading(false);
-  }, []);
+    const fetchAnalyses = async () => {
+      if (user) {
+        const result = await getSavedAnalyses(user.id);
+        if (result.success && result.data) {
+          setAnalyses(result.data as SavedAnalysis[]);
+          setFilteredAnalyses(result.data as SavedAnalysis[]);
+        }
+      }
+      setIsLoading(false);
+    };
+
+    fetchAnalyses();
+  }, [user]);
 
   useEffect(() => {
     const filtered = analyses.filter(
@@ -54,10 +62,20 @@ export default function SavedPage() {
     setFilteredAnalyses(filtered);
   }, [searchTerm, analyses]);
 
-  const handleDelete = (id: number) => {
-    const updatedAnalyses = analyses.filter((analysis) => analysis.id !== id);
-    setAnalyses(updatedAnalyses);
-    localStorage.setItem('savedAnalyses', JSON.stringify(updatedAnalyses));
+  const handleDelete = async (id: string) => {
+    if (!user) return;
+
+    const result = await deleteAnalysis(id, user.id);
+
+    if (result.success) {
+      const updatedAnalyses = analyses.filter((analysis) => analysis.id !== id);
+      setAnalyses(updatedAnalyses);
+      setFilteredAnalyses(filteredAnalyses.filter((analysis) => analysis.id !== id));
+    } else {
+      console.error('Failed to delete analysis:', result.error);
+      // You could show a toast notification here
+      alert(`Failed to delete analysis: ${result.error}`);
+    }
   };
 
   if (isLoading) {
