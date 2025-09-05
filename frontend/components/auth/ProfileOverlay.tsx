@@ -19,9 +19,14 @@ export function ProfileOverlay({ isOpen, onClose }: ProfileOverlayProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
 
-  // Close overlay when clicking outside
+  // Close overlay when clicking outside (but not when delete dialog is open)
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      // Don't close if delete dialog is open
+      if (showDeleteDialog) {
+        return;
+      }
+
       if (overlayRef.current && !overlayRef.current.contains(event.target as Node)) {
         onClose();
       }
@@ -34,7 +39,7 @@ export function ProfileOverlay({ isOpen, onClose }: ProfileOverlayProps) {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, showDeleteDialog]);
 
   const handleSignOut = async () => {
     if (!user) return;
