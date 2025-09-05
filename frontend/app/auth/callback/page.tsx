@@ -45,7 +45,7 @@ export default function AuthCallbackPage() {
 
         // If no hash or tokens, redirect to signin
         router.push('/auth/signin');
-      } catch (error) {
+      } catch {
         router.push('/auth/auth-code-error?error=callback_error');
       }
     };

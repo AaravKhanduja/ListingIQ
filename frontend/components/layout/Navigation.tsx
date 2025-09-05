@@ -1,31 +1,18 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Home, LogOut, User } from 'lucide-react';
+import { Home, User } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { useState } from 'react';
+import { ProfileOverlay } from '@/components/auth/ProfileOverlay';
 
 export function Navigation() {
-  const { signOut, user } = useAuth();
-  const [isSigningOut, setIsSigningOut] = useState(false);
-
-  const handleSignOut = async () => {
-    if (!user) return;
-
-    setIsSigningOut(true);
-    try {
-      await signOut();
-    } catch {
-      // Even if signout fails, try to redirect
-      window.location.href = '/auth/signin';
-    } finally {
-      setIsSigningOut(false);
-    }
-  };
+  const { user } = useAuth();
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   return (
-    <header className="border-b border-blue-100 bg-white/90 backdrop-blur-sm sticky top-0 z-50">
+    <header className="border-b border-blue-100 bg-white/90 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link
@@ -40,10 +27,6 @@ export function Navigation() {
           <nav className="flex items-center space-x-3">
             {user && (
               <>
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <User className="h-4 w-4" />
-                  <span>{user.email}</span>
-                </div>
                 <Link href="/saved">
                   <Button
                     variant="outline"
@@ -56,12 +39,16 @@ export function Navigation() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleSignOut}
-                  disabled={isSigningOut}
-                  className="text-red-600 border-red-200 hover:bg-red-50 disabled:opacity-50"
+                  onClick={() => setIsProfileOpen(true)}
+                  className="flex items-center gap-2 bg-white border-gray-200 hover:bg-gray-50"
                 >
-                  <LogOut className="h-4 w-4 mr-1" />
-                  {isSigningOut ? 'Signing Out...' : 'Sign Out'}
+                  <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs font-medium">
+                      {user.user_metadata?.full_name?.charAt(0) ||
+                        user.email?.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <User className="h-4 w-4" />
                 </Button>
               </>
             )}
@@ -79,6 +66,8 @@ export function Navigation() {
           </nav>
         </div>
       </div>
+
+      <ProfileOverlay isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
     </header>
   );
 }

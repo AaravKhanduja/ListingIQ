@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Navigation } from '@/components/layout/Navigation';
 import { ActionButtons } from '@/components/listing/ActionButtons';
 import { LoadingState } from '@/components/listing/LoadingState';
+import { SaveButton } from '@/components/listing/SaveButton';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +30,8 @@ import {
 } from 'lucide-react';
 
 import { analyzeListing, AnalyzeRequest, ManualPropertyData } from '@/lib/analyze';
+import { saveAnalysis } from '@/lib/save-analysis-hybrid';
+import { useAuth } from '@/lib/auth';
 
 // -----------------------------
 // Types used locally
@@ -72,6 +75,7 @@ interface ListingData {
 
 export default function ListingPage() {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
 
   const [listingData, setListingData] = useState<ListingData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -162,6 +166,13 @@ export default function ListingPage() {
 
           setAnalysisProgress(95);
           setListingData(newAnalysis);
+
+          // Auto-save the analysis
+          if (user) {
+            const propertyInput = decodeURIComponent(String(id));
+            saveAnalysis(newAnalysis, propertyInput, user.id);
+          }
+
           setAnalysisProgress(100);
         } else {
           setError(response.error || 'Failed to load analysis');
@@ -185,7 +196,7 @@ export default function ListingPage() {
       }
     };
     fetchAnalysis();
-  }, [id]);
+  }, [id, user]);
 
   if (loading) return <LoadingState analysisProgress={analysisProgress} />;
 
@@ -257,6 +268,10 @@ export default function ListingPage() {
                   {listingData.manualData.bedrooms} bed, {listingData.manualData.bathrooms} bath
                 </span>
               )}
+              <SaveButton
+                listingData={listingData}
+                propertyInput={decodeURIComponent(String(id))}
+              />
             </div>
           </div>
         </div>
