@@ -10,6 +10,7 @@ interface AuthContextType {
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signInWithGoogle: () => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -247,7 +248,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Force a full page reload to clear any residual state
         window.location.href = '/auth/signin';
-      } catch (error) {
+      } catch {
         // Clear user state even if signout fails
         setUser(null);
         // Force a full page reload to clear any residual state
@@ -259,6 +260,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isDevMode]);
 
+  const deleteAccount = useCallback(async () => {
+    if (!user) {
+      return { success: false, error: 'No user logged in' };
+    }
+
+    if (isDevMode) {
+      // Development mode: clear localStorage and redirect
+      localStorage.removeItem('dev-user');
+      setUser(null);
+      window.location.href = '/auth/signin';
+      return { success: true };
+    }
+
+    // Production mode: use Supabase if configured
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (supabaseUrl && supabaseKey) {
+      try {
+        // Use Supabase delete account function
+        const { deleteAccount: supabaseDeleteAccount } = await import('@/lib/supabase/auth');
+        const result = await supabaseDeleteAccount(user.id);
+
+        if (result.success) {
+          // Clear user state
+          setUser(null);
+
+          // Clear any local storage that might contain auth data
+          localStorage.removeItem('supabase.auth.token');
+          sessionStorage.clear();
+
+          // Wait a moment for the session to be fully cleared
+          await new Promise((resolve) => setTimeout(resolve, 200));
+
+          // Force a full page reload to clear any residual state
+          window.location.href = '/auth/signin';
+        }
+
+        return result;
+      } catch (error) {
+        console.error('Error deleting account:', error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error occurred',
+        };
+      }
+    } else {
+      return { success: false, error: 'Supabase not configured' };
+    }
+  }, [user, isDevMode]);
+
   const value = {
     user,
     loading,
@@ -266,6 +318,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     signInWithGoogle,
     signOut,
+    deleteAccount,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
