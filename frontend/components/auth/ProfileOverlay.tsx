@@ -61,7 +61,11 @@ export function ProfileOverlay({ isOpen, onClose }: ProfileOverlayProps) {
   };
 
   const handleDeleteAccount = async () => {
-    if (!user) return;
+    console.log('handleDeleteAccount function called');
+    if (!user) {
+      console.log('No user found, returning early');
+      return;
+    }
 
     console.log('Delete account button clicked, user:', user);
     setIsDeletingAccount(true);
@@ -166,6 +170,7 @@ export function ProfileOverlay({ isOpen, onClose }: ProfileOverlayProps) {
                     variant="outline"
                     size="sm"
                     className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50"
+                    onClick={() => console.log('Delete account button clicked - opening dialog')}
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
                     Delete Account
@@ -182,7 +187,10 @@ export function ProfileOverlay({ isOpen, onClose }: ProfileOverlayProps) {
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction
-                      onClick={handleDeleteAccount}
+                      onClick={() => {
+                        console.log('AlertDialogAction button clicked');
+                        handleDeleteAccount();
+                      }}
                       disabled={isDeletingAccount}
                       className="bg-red-600 hover:bg-red-700"
                     >
