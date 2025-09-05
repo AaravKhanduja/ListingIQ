@@ -56,25 +56,18 @@ export function ProfileOverlay({ isOpen, onClose }: ProfileOverlayProps) {
   };
 
   const handleDeleteAccount = async () => {
-    console.log('handleDeleteAccount function called');
     if (!user) {
-      console.log('No user found, returning early');
       return;
     }
-
-    console.log('Delete account button clicked, user:', user);
     setIsDeletingAccount(true);
     try {
       const result = await deleteAccount();
-      console.log('Delete account result:', result);
       if (!result.success) {
-        console.error('Failed to delete account:', result.error);
         // You could show a toast notification here
         alert(`Failed to delete account: ${result.error}`);
       }
       // If successful, the user will be redirected automatically
     } catch (error) {
-      console.error('Error deleting account:', error);
       alert('An unexpected error occurred while deleting your account');
     } finally {
       setIsDeletingAccount(false);
@@ -94,7 +87,6 @@ export function ProfileOverlay({ isOpen, onClose }: ProfileOverlayProps) {
           onClick={(e) => {
             // Close dialog if clicking on backdrop
             if (e.target === e.currentTarget) {
-              console.log('Backdrop clicked, closing dialog');
               setShowDeleteDialog(false);
             }
           }}
@@ -115,7 +107,6 @@ export function ProfileOverlay({ isOpen, onClose }: ProfileOverlayProps) {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('Cancel delete clicked');
                     setShowDeleteDialog(false);
                   }}
                 >
@@ -125,7 +116,6 @@ export function ProfileOverlay({ isOpen, onClose }: ProfileOverlayProps) {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('Confirm delete button clicked');
                     setShowDeleteDialog(false);
                     handleDeleteAccount();
                   }}
@@ -221,7 +211,6 @@ export function ProfileOverlay({ isOpen, onClose }: ProfileOverlayProps) {
                   size="sm"
                   className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50"
                   onClick={() => {
-                    console.log('Delete account button clicked - opening dialog');
                     setShowDeleteDialog(true);
                   }}
                 >

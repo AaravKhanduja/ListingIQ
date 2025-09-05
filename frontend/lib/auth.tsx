@@ -263,7 +263,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [isDevMode]);
 
   const deleteAccount = useCallback(async () => {
-    console.log('Auth context deleteAccount called, user:', user);
     if (!user) {
       return { success: false, error: 'No user logged in' };
     }
@@ -304,7 +303,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         return result;
       } catch (error) {
-        console.error('Error deleting account:', error);
         return {
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error occurred',

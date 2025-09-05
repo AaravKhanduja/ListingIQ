@@ -16,22 +16,15 @@ async def delete_account(current_user: dict = Depends(get_current_user)):
     1. Delete all user's saved analyses
     2. Delete the user account from Supabase Auth using admin privileges
     """
-    logger.info(f"Delete account endpoint called, current_user: {current_user}")
-
     if not current_user:
-        logger.error("No current_user found - authentication failed")
         raise HTTPException(status_code=401, detail="Authentication required")
 
     user_id = current_user.get("id")
     if not user_id:
-        logger.error(f"Invalid user data - no id field: {current_user}")
         raise HTTPException(status_code=400, detail="Invalid user data")
 
     try:
-        logger.info(f"Starting account deletion for user {user_id}")
-
         # First, delete all user's saved analyses
-        logger.info(f"Deleting analyses for user {user_id}")
 
         # Delete from saved_analyses table
         supabase_service.client.table("saved_analyses").delete().eq(
@@ -47,7 +40,6 @@ async def delete_account(current_user: dict = Depends(get_current_user)):
             logger.warning(f"Could not delete from analyses table: {e}")
 
         # Delete the user account using admin privileges
-        logger.info(f"Deleting user account {user_id} from Supabase Auth")
         delete_user_response = supabase_service.client.auth.admin.delete_user(user_id)
 
         # Defensive error handling for different response structures
@@ -59,13 +51,10 @@ async def delete_account(current_user: dict = Depends(get_current_user)):
 
         if error:
             error_message = getattr(error, "message", str(error))
-            logger.error(f"Failed to delete user account: {error_message}")
             raise HTTPException(
                 status_code=500,
                 detail=f"Failed to delete user account: {error_message}",
             )
-
-        logger.info(f"Successfully deleted user account {user_id}")
 
         return {
             "success": True,
@@ -74,8 +63,7 @@ async def delete_account(current_user: dict = Depends(get_current_user)):
 
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"Error deleting account for user {user_id}: {str(e)}")
+    except Exception:
         raise HTTPException(
             status_code=500,
             detail="An unexpected error occurred while deleting your account",
