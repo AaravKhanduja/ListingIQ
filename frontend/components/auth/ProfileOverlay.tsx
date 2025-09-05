@@ -61,6 +61,8 @@ export function ProfileOverlay({ isOpen, onClose }: ProfileOverlayProps) {
   };
 
   const handleDeleteAccount = async () => {
+    if (!user) return;
+
     setIsDeletingAccount(true);
     try {
       const result = await deleteAccount();

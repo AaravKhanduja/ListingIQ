@@ -176,18 +176,30 @@ export async function deleteAnalysisFromSupabase(
       return { success: false, error: 'Supabase not configured' };
     }
     
-    // Delete the analysis directly from Supabase
-    const { error } = await supabase
-      .from('saved_analyses')
-      .delete()
-      .eq('id', analysisId)
-      .eq('user_id', userId);
-
-    if (error) {
-      return { success: false, error: error.message };
+    // Get the current session to get the access token
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !session) {
+      return { success: false, error: 'No active session found' };
     }
 
-    return { success: true };
+    // Call the backend API to delete the analysis
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const response = await fetch(`${backendUrl}/api/user/analyses/${analysisId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+      return { success: false, error: errorData.detail || `HTTP ${response.status}` };
+    }
+
+    const result = await response.json();
+    return result;
   } catch (error) {
     return { 
       success: false, 
