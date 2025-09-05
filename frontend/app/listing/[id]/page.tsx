@@ -76,6 +76,7 @@ export default function ListingPage() {
   const [listingData, setListingData] = useState<ListingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [analysisProgress, setAnalysisProgress] = useState(0);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['methodology']));
 
   const toggleSection = (key: string) => {
@@ -93,10 +94,12 @@ export default function ListingPage() {
       try {
         setLoading(true);
         setError(null);
+        setAnalysisProgress(10);
 
         const propertyAddress = decodeURIComponent(String(id));
 
         // Get the manual data from localStorage
+        setAnalysisProgress(20);
         const currentPropertyData = localStorage.getItem('currentProperty');
         let manualData: ManualPropertyData | undefined;
 
@@ -111,17 +114,32 @@ export default function ListingPage() {
           }
         }
 
+        setAnalysisProgress(30);
         const request: AnalyzeRequest = {
           property_address: propertyAddress,
           property_title: propertyAddress,
           manual_data: manualData,
         };
 
+        setAnalysisProgress(40);
+
+        // Simulate progress during LLM processing
+        const progressInterval = setInterval(() => {
+          setAnalysisProgress((prev) => {
+            if (prev < 65) return prev + 2;
+            return prev;
+          });
+        }, 200);
+
         const response = await analyzeListing(request);
+        clearInterval(progressInterval);
+
+        setAnalysisProgress(70);
 
         if (response.success && response.analysis) {
           const a = response.analysis;
 
+          setAnalysisProgress(85);
           const newAnalysis: ListingData = {
             propertyTitle: a.property_title || propertyAddress,
             summary: a.summary || '',
@@ -142,7 +160,9 @@ export default function ListingPage() {
             generatedAt: a.generated_at || undefined,
           };
 
+          setAnalysisProgress(95);
           setListingData(newAnalysis);
+          setAnalysisProgress(100);
         } else {
           setError(response.error || 'Failed to load analysis');
         }
@@ -167,7 +187,7 @@ export default function ListingPage() {
     fetchAnalysis();
   }, [id]);
 
-  if (loading) return <LoadingState analysisProgress={0} />;
+  if (loading) return <LoadingState analysisProgress={analysisProgress} />;
 
   if (error) {
     return (

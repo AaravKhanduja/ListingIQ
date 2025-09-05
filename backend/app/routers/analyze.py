@@ -229,51 +229,40 @@ async def generate_property_analysis(
 
     {f"ADDITIONAL NOTES: {manual_data.additional_notes}" if manual_data and manual_data.additional_notes else ""}
 
-    TASK: Provide a focused property analysis in the following JSON format. ONLY analyze what you can determine from the provided information. DO NOT make up market trends, comparable prices, or appreciation rates. Focus on factual analysis based on the data provided:
+    TASK: Provide a concise property analysis in JSON format. Focus only on what you can determine from the provided information:
 
     {{
-        "summary": "A concise 2-3 sentence summary of the property's key characteristics based on provided information",
+        "summary": "2-3 sentence summary of key property characteristics",
         "key_strengths": [
-            "3-5 key strengths of this property based on the provided data",
-            "Focus on concrete features, location advantages, property condition indicators, etc."
+            "3-4 key strengths based on provided data"
         ],
         "areas_to_research": [
-            "3-5 specific areas that need additional research or verification",
-            "Include property condition, neighborhood details, market factors that need investigation"
+            "3-4 areas needing additional research"
         ],
         "hidden_risks": [
-            "3-5 potential hidden risks or issues based on the provided information",
-            "Think about what might not be obvious from the listing, structural concerns, etc."
+            "3-4 potential risks based on provided info"
         ],
         "questions_for_realtor": [
-            "5-7 critical questions a buyer should ask their realtor",
-            "Focus on verification, due diligence, and decision-making factors"
-        ],
-        "additional_info": {{
-            "property_condition_indicators": "Any clues about property condition from the provided data",
-            "location_advantages": "Location benefits that can be determined from the data",
-            "potential_concerns": "Any red flags or concerns visible in the provided information"
-        }},
-        "analysis_methodology": {{
-            "data_sources": "What information was analyzed to create this assessment",
-            "limitations": "What information is missing that would improve this analysis",
-            "recommendations": "What additional research or inspections are needed"
-        }}
+            "5-6 critical questions for the realtor"
+        ]
     }}
 
-    IMPORTANT GUIDELINES:
-    - ONLY analyze what you can determine from the provided information
-    - DO NOT make up market trends, comparable prices, or appreciation rates
-    - DO NOT speculate about market conditions you cannot verify
-    - Focus on factual analysis of the property details provided
-    - Be honest about what you can and cannot determine
-    - Highlight areas where more information is needed
-    - Provide actionable insights for further research
+    GUIDELINES:
+    - Only analyze provided information
+    - No market speculation or made-up data
+    - Be concise and factual
+    - Focus on actionable insights
     """
 
     try:
-        analysis_json = await llm_service.generate_analysis(prompt)
-    except Exception:
+        import asyncio
+
+        # Add timeout to prevent hanging
+        analysis_json = await asyncio.wait_for(
+            llm_service.generate_analysis(prompt),
+            timeout=45.0,  # 45 second timeout
+        )
+    except (Exception, asyncio.TimeoutError):
         analysis_json = None
 
     if analysis_json:

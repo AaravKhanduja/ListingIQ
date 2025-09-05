@@ -98,7 +98,8 @@ class LLMService:
                     {"role": "user", "content": prompt},
                 ],
                 temperature=0.3,
-                max_tokens=2000,
+                max_tokens=1500,  # Reduced for faster response
+                timeout=30,  # Add timeout for faster failure
             )
 
             analysis_text = response.choices[0].message.content.strip()
@@ -124,7 +125,10 @@ class LLMService:
                         },
                         {"role": "user", "content": prompt},
                     ],
-                    options={"temperature": 0.3, "num_predict": 2000},
+                    options={
+                        "temperature": 0.3,
+                        "num_predict": 1500,
+                    },  # Reduced for faster response
                 )
                 return response["message"]["content"]
 
