@@ -186,16 +186,16 @@ export function ProfileOverlay({ isOpen, onClose }: ProfileOverlayProps) {
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
+                    <Button
                       onClick={() => {
-                        console.log('AlertDialogAction button clicked');
+                        console.log('Custom delete button clicked');
                         handleDeleteAccount();
                       }}
                       disabled={isDeletingAccount}
-                      className="bg-red-600 hover:bg-red-700"
+                      className="bg-red-600 hover:bg-red-700 text-white"
                     >
                       {isDeletingAccount ? 'Deleting...' : 'Delete Account'}
-                    </AlertDialogAction>
+                    </Button>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
