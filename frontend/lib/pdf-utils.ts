@@ -389,7 +389,7 @@ export const downloadTextPDF = async (filename: string = 'listing-analysis.pdf')
     
     pdf.save(filename);
     
-  } catch (error) {
+  } catch {
     throw new Error('Failed to generate PDF. Please try again.');
   }
 };
@@ -484,7 +484,7 @@ function extractAnalysisData(mainContent: Element) {
           ...latestAnalysis.analysis,
         };
       }
-    } catch (error) {
+    } catch {
       // Silent fail
     }
   }

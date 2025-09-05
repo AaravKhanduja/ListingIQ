@@ -25,6 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+
   // Check if we're in development mode
   const isDevMode = process.env.NODE_ENV === 'development';
 

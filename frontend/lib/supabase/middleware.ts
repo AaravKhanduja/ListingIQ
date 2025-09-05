@@ -57,7 +57,7 @@ export async function updateSession(request: NextRequest) {
       url.pathname = '/auth/signin';
       return NextResponse.redirect(url);
     }
-  } catch (error) {
+  } catch {
     // If there's an error with Supabase, allow the request to continue
     return NextResponse.next({
       request,

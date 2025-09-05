@@ -87,7 +87,7 @@ export async function refreshUser() {
     } else {
       return { error: new Error('No session after refresh') };
     }
-  } catch (error) {
+  } catch {
     return { error: new Error('Token refresh failed') };
   }
 }
