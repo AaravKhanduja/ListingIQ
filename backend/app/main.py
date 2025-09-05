@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from app.routers import analyze
+from app.routers import analyze, user
 from app.middleware.rate_limit import rate_limit_middleware
 from app.middleware.validation import validate_request_middleware
 from app.services.logger import logger
@@ -86,6 +86,7 @@ async def validate_request(request: Request, call_next):
 
 
 app.include_router(analyze.router, prefix="/api")
+app.include_router(user.router, prefix="/api")
 
 
 @app.get("/health")
