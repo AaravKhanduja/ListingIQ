@@ -19,7 +19,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 interface DevUser {
   id: string;
   email: string;
-  user_metadata?: { name?: string };
+  user_metadata?: { full_name?: string };
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -64,27 +64,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         checkSession();
 
         // Set up auth state change listener
-        const setupAuthListener = async () => {
+        const init = async () => {
           try {
-            const { onAuthStateChange } = await import('@/lib/supabase/auth');
-            const { data } = onAuthStateChange((user: User | null) => {
-              setUser(user);
-            });
-            return data;
-          } catch {}
+            const { getCurrentUser, onAuthStateChange } = await import('@/lib/supabase/auth');
+            const current = await getCurrentUser();
+            if (current) setUser(current);
+
+            const { data } = onAuthStateChange((u) => setUser(u));
+            // Return cleanup function
+            return () => data?.subscription?.unsubscribe();
+          } catch {
+            return null;
+          }
         };
 
-        const authListener = setupAuthListener();
+        const cleanupPromise = init();
 
         // Cleanup function
         return () => {
-          if (authListener) {
-            authListener.then((data) => {
-              if (data?.subscription) {
-                data.subscription.unsubscribe();
-              }
-            });
-          }
+          cleanupPromise.then((cleanup) => {
+            if (typeof cleanup === 'function') {
+              cleanup();
+            }
+          });
         };
       } else {
         // No Supabase configured, just set loading to false
@@ -100,7 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const devUser: DevUser = {
           id: 'dev-user-' + Date.now(),
           email,
-          user_metadata: { name: email.split('@')[0] },
+          user_metadata: { full_name: email.split('@')[0] },
         };
         localStorage.setItem('dev-user', JSON.stringify(devUser));
         setUser(devUser as User);
@@ -140,7 +142,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const devUser: DevUser = {
           id: 'dev-user-' + Date.now(),
           email,
-          user_metadata: { name: email.split('@')[0] },
+          user_metadata: { full_name: email.split('@')[0] },
         };
         localStorage.setItem('dev-user', JSON.stringify(devUser));
         setUser(devUser as User);
@@ -181,7 +183,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const devUser: DevUser = {
         id: 'dev-user-' + Date.now(),
         email: 'dev-user@example.com',
-        user_metadata: { name: 'Dev User' },
+        user_metadata: { full_name: 'Dev User' },
       };
       localStorage.setItem('dev-user', JSON.stringify(devUser));
       setUser(devUser as User);
@@ -297,6 +299,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           // Force a full page reload to clear any residual state
           window.location.href = '/auth/signin';
+          return result;
         }
 
         return result;

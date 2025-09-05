@@ -3,7 +3,7 @@ import type { User } from '@supabase/supabase-js';
 
 // Check if Supabase is configured
 const isSupabaseConfigured = () => {
-  return supabase !== null;
+  return Boolean(supabase);
 };
 
 export async function signInWithEmail(email: string, password: string) {
@@ -110,6 +110,7 @@ export function onAuthStateChange(callback: (user: User | null) => void) {
 export async function deleteAccount(userId: string): Promise<{ success: boolean; error?: string }> {
   console.log('Supabase deleteAccount called with userId:', userId);
   if (!isSupabaseConfigured()) {
+    console.error('Supabase is not configured');
     return { success: false, error: 'Supabase is not configured' };
   }
 
@@ -118,12 +119,18 @@ export async function deleteAccount(userId: string): Promise<{ success: boolean;
     // Get the current session to get the access token
     const { data: { session }, error: sessionError } = await supabase!.auth.getSession();
     
+    console.log('Session check result:', { sessionError, hasSession: !!session });
+    
     if (sessionError || !session) {
+      console.error('No active session found:', sessionError);
       return { success: false, error: 'No active session found' };
     }
 
     // Call the backend API to delete the account (this will actually delete the user account)
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    console.log('Making DELETE request to:', `${backendUrl}/api/user/account`);
+    console.log('Using access token:', session.access_token ? 'Present' : 'Missing');
+    
     const response = await fetch(`${backendUrl}/api/user/account`, {
       method: 'DELETE',
       headers: {
@@ -132,8 +139,12 @@ export async function deleteAccount(userId: string): Promise<{ success: boolean;
       },
     });
 
+    console.log('Backend response status:', response.status);
+    console.log('Backend response ok:', response.ok);
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+      console.error('Backend error response:', errorData);
       return { success: false, error: errorData.detail || `HTTP ${response.status}` };
     }
 

@@ -16,11 +16,15 @@ async def delete_account(current_user: dict = Depends(get_current_user)):
     1. Delete all user's saved analyses
     2. Delete the user account from Supabase Auth using admin privileges
     """
+    logger.info(f"Delete account endpoint called, current_user: {current_user}")
+
     if not current_user:
+        logger.error("No current_user found - authentication failed")
         raise HTTPException(status_code=401, detail="Authentication required")
 
     user_id = current_user.get("id")
     if not user_id:
+        logger.error(f"Invalid user data - no id field: {current_user}")
         raise HTTPException(status_code=400, detail="Invalid user data")
 
     try:
@@ -46,13 +50,19 @@ async def delete_account(current_user: dict = Depends(get_current_user)):
         logger.info(f"Deleting user account {user_id} from Supabase Auth")
         delete_user_response = supabase_service.client.auth.admin.delete_user(user_id)
 
-        if delete_user_response.get("error"):
-            logger.error(
-                f"Failed to delete user account: {delete_user_response['error']}"
-            )
+        # Defensive error handling for different response structures
+        error = getattr(delete_user_response, "error", None) or (
+            delete_user_response.get("error")
+            if isinstance(delete_user_response, dict)
+            else None
+        )
+
+        if error:
+            error_message = getattr(error, "message", str(error))
+            logger.error(f"Failed to delete user account: {error_message}")
             raise HTTPException(
                 status_code=500,
-                detail=f"Failed to delete user account: {delete_user_response['error']['message']}",
+                detail=f"Failed to delete user account: {error_message}",
             )
 
         logger.info(f"Successfully deleted user account {user_id}")
