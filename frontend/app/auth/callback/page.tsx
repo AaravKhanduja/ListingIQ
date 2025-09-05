@@ -12,7 +12,6 @@ export default function AuthCallbackPage() {
       try {
         // Get the hash fragment from the URL
         const hash = window.location.hash;
-        console.log('Callback hash:', hash);
 
         if (hash) {
           // Parse the hash fragment
@@ -22,7 +21,6 @@ export default function AuthCallbackPage() {
           const error = params.get('error');
 
           if (error) {
-            console.error('OAuth error:', error);
             router.push('/auth/auth-code-error?error=' + encodeURIComponent(error));
             return;
           }
@@ -35,7 +33,6 @@ export default function AuthCallbackPage() {
             });
 
             if (sessionError) {
-              console.error('Session error:', sessionError);
               router.push('/auth/auth-code-error?error=session_error');
               return;
             }
@@ -49,7 +46,6 @@ export default function AuthCallbackPage() {
         // If no hash or tokens, redirect to signin
         router.push('/auth/signin');
       } catch (error) {
-        console.error('Callback error:', error);
         router.push('/auth/auth-code-error?error=callback_error');
       }
     };

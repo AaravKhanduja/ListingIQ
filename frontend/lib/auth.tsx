@@ -232,7 +232,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { signOut: supabaseSignOut } = await import('@/lib/supabase/auth');
         const { error } = await supabaseSignOut();
         if (error) {
-          console.error('Sign out error:', error);
+          // Silent fail for sign out errors
         }
 
         // Clear user state regardless of error
@@ -248,7 +248,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Force a full page reload to clear any residual state
         window.location.href = '/auth/signin';
       } catch (error) {
-        console.error('Sign out error:', error);
         // Clear user state even if signout fails
         setUser(null);
         // Force a full page reload to clear any residual state
