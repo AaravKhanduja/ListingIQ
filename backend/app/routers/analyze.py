@@ -1,5 +1,6 @@
 # backend/api/analyze.py
 from __future__ import annotations
+import os
 from fastapi import APIRouter, Depends, HTTPException
 from typing import Optional, Dict, Any
 from datetime import datetime
@@ -33,10 +34,6 @@ async def analyze_property(
     Temporarily using optional auth for testing.
     """
     try:
-        # Debug logging
-        print(f"🔍 Received request: {request}")
-        print("🔍 Using dev user for development")
-
         # Validate required fields
         if not request.property_address:
             return AnalysisResponse(success=False, error="Property address is required")
@@ -72,11 +69,20 @@ async def analyze_property(
         return AnalysisResponse(success=True, analysis=analysis)
 
     except Exception as e:
-        print(f"❌ Error in analyze_property: {e}")
         import traceback
+        import logging
 
-        traceback.print_exc()
-        return AnalysisResponse(success=False, error=str(e))
+        # Log error for debugging (production should use proper logging)
+        logging.error(f"Error in analyze_property: {e}")
+        logging.error(traceback.format_exc())
+
+        # Return generic error message in production
+        if os.getenv("ENVIRONMENT") == "production":
+            return AnalysisResponse(
+                success=False, error="An error occurred during analysis"
+            )
+        else:
+            return AnalysisResponse(success=False, error=str(e))
 
 
 @router.get("/analyses", response_model=Dict[str, Any])
@@ -223,62 +229,51 @@ async def generate_property_analysis(
 
     {f"ADDITIONAL NOTES: {manual_data.additional_notes}" if manual_data and manual_data.additional_notes else ""}
 
-    TASK: Provide a comprehensive property analysis in the following JSON format. Focus on being practical, actionable, and identifying real risks and opportunities:
+    TASK: Provide a focused property analysis in the following JSON format. ONLY analyze what you can determine from the provided information. DO NOT make up market trends, comparable prices, or appreciation rates. Focus on factual analysis based on the data provided:
 
     {{
-        "summary": "A concise 2-3 sentence summary of the property's overall appeal and key characteristics",
-        "strengths": [
-            "3-5 key strengths of this property - be specific and actionable",
-            "Focus on location, condition, features, market position, etc."
+        "summary": "A concise 2-3 sentence summary of the property's key characteristics based on provided information",
+        "key_strengths": [
+            "3-5 key strengths of this property based on the provided data",
+            "Focus on concrete features, location advantages, property condition indicators, etc."
         ],
-        "weaknesses": [
-            "3-5 areas of concern or limitations - be honest and specific",
-            "Include potential red flags, maintenance issues, market risks, etc."
+        "areas_to_research": [
+            "3-5 specific areas that need additional research or verification",
+            "Include property condition, neighborhood details, market factors that need investigation"
         ],
         "hidden_risks": [
-            "3-5 hidden risks or issues that might not be immediately obvious",
-            "Think about structural issues, neighborhood changes, market timing, etc."
+            "3-5 potential hidden risks or issues based on the provided information",
+            "Think about what might not be obvious from the listing, structural concerns, etc."
         ],
         "questions_for_realtor": [
             "5-7 critical questions a buyer should ask their realtor",
             "Focus on verification, due diligence, and decision-making factors"
         ],
-        "market_analysis": {{
-            "trends": "Current market conditions and trends for this type of property",
-            "comparables": "How this property compares to similar properties in the area",
-            "appreciation_potential": "Realistic assessment of appreciation potential"
+        "additional_info": {{
+            "property_condition_indicators": "Any clues about property condition from the provided data",
+            "location_advantages": "Location benefits that can be determined from the data",
+            "potential_concerns": "Any red flags or concerns visible in the provided information"
         }},
-        "investment_potential": {{
-            "rental_income": "Assessment of rental income potential if applicable",
-            "cash_flow": "Cash flow considerations for investors",
-            "roi_projections": "Realistic ROI expectations",
-            "appreciation_timeline": "Expected timeline for appreciation"
-        }},
-        "risk_assessment": {{
-            "market_risks": ["Specific market risks to consider"],
-            "property_risks": ["Property-specific risks and concerns"],
-            "mitigation_strategies": ["How to mitigate identified risks"]
-        }},
-        "renovation_analysis": {{
-            "estimated_costs": "Estimated renovation costs if needed",
-            "priority_improvements": ["Priority improvements that would add value"],
-            "renovation_roi": "Expected ROI on renovations"
+        "analysis_methodology": {{
+            "data_sources": "What information was analyzed to create this assessment",
+            "limitations": "What information is missing that would improve this analysis",
+            "recommendations": "What additional research or inspections are needed"
         }}
     }}
 
     IMPORTANT GUIDELINES:
-    - Be honest and realistic - don't sugar-coat issues
-    - Focus on actionable insights that help buyers make informed decisions
-    - Consider both immediate and long-term factors
-    - Think like an experienced investor who has seen many properties
-    - Highlight both opportunities and risks
-    - Be specific rather than generic
+    - ONLY analyze what you can determine from the provided information
+    - DO NOT make up market trends, comparable prices, or appreciation rates
+    - DO NOT speculate about market conditions you cannot verify
+    - Focus on factual analysis of the property details provided
+    - Be honest about what you can and cannot determine
+    - Highlight areas where more information is needed
+    - Provide actionable insights for further research
     """
 
     try:
         analysis_json = await llm_service.generate_analysis(prompt)
-    except Exception as e:
-        print(f"❌ LLM analysis failed: {e}")
+    except Exception:
         analysis_json = None
 
     if analysis_json:
@@ -294,60 +289,40 @@ async def generate_property_analysis(
             disclaimer="This report is generated from the information you provided and is for educational/informational purposes only. It is not real estate, investment, or financial advice. Please consult licensed professionals before making decisions.",
             manual_data=manual_data,
             market_analysis=MarketAnalysis(
-                trends=analysis_json.get("market_analysis", {}).get(
-                    "trends", "Based on provided information"
-                ),
-                comparables=analysis_json.get("market_analysis", {}).get(
-                    "comparables", "Based on provided information"
-                ),
-                appreciation_potential=analysis_json.get("market_analysis", {}).get(
-                    "appreciation_potential", "Based on provided information"
-                ),
+                trends="Analysis based on provided property information only",
+                comparables="No comparable market data available",
+                appreciation_potential="Market analysis requires additional research",
             ),
             investment_potential=InvestmentPotential(
-                rental_income=analysis_json.get("investment_potential", {}).get(
-                    "rental_income", "Based on provided information"
-                ),
-                cash_flow=analysis_json.get("investment_potential", {}).get(
-                    "cash_flow", "Based on provided information"
-                ),
-                roi_projections=analysis_json.get("investment_potential", {}).get(
-                    "roi_projections", "Based on provided information"
-                ),
-                appreciation_timeline=analysis_json.get("investment_potential", {}).get(
-                    "appreciation_timeline", "Based on provided information"
-                ),
+                rental_income="Requires market research and property condition assessment",
+                cash_flow="Based on provided property details only",
+                roi_projections="Market analysis needed for accurate projections",
+                appreciation_timeline="Requires local market research",
             ),
             risk_assessment=RiskAssessment(
-                market_risks=analysis_json.get("risk_assessment", {}).get(
-                    "market_risks", ["Based on provided information"]
+                market_risks=["Market conditions require local research"],
+                property_risks=analysis_json.get(
+                    "hidden_risks", ["Analysis based on provided information"]
                 ),
-                property_risks=analysis_json.get("risk_assessment", {}).get(
-                    "property_risks", ["Based on provided information"]
-                ),
-                mitigation_strategies=analysis_json.get("risk_assessment", {}).get(
-                    "mitigation_strategies", ["Based on provided information"]
-                ),
+                mitigation_strategies=[
+                    "Conduct thorough due diligence and inspections"
+                ],
             ),
             renovation_analysis=RenovationAnalysis(
-                estimated_costs=analysis_json.get("renovation_analysis", {}).get(
-                    "estimated_costs", "Based on provided information"
-                ),
-                priority_improvements=analysis_json.get("renovation_analysis", {}).get(
-                    "priority_improvements", ["Based on provided information"]
-                ),
-                renovation_roi=analysis_json.get("renovation_analysis", {}).get(
-                    "renovation_roi", "Based on provided information"
-                ),
+                estimated_costs="Property condition assessment needed",
+                priority_improvements=["Based on property details provided"],
+                renovation_roi="Requires local market analysis",
             ),
             investment_recommendation=InvestmentRecommendation(
-                recommendation="Consider",
-                ideal_buyer="Based on analysis",
-                timeline="Based on analysis",
+                recommendation="Research",
+                ideal_buyer="Based on property characteristics",
+                timeline="Requires market research",
             ),
-            strengths=analysis_json.get("strengths", ["Property analysis completed"]),
+            strengths=analysis_json.get(
+                "key_strengths", ["Property analysis completed"]
+            ),
             weaknesses=analysis_json.get(
-                "weaknesses", ["Analysis based on provided information"]
+                "areas_to_research", ["Analysis based on provided information"]
             ),
             hidden_issues=analysis_json.get(
                 "hidden_risks", ["Analysis based on provided information"]
@@ -357,49 +332,59 @@ async def generate_property_analysis(
             ),
             generated_at=datetime.now().isoformat(),
         )
-
-    # Fallback if LLM fails
-    return PropertyAnalysis(
-        property_address=address,
-        property_title=title,
-        user_id=user_id,
-        overall_score=70,
-        summary="Property analysis based on provided information. AI analysis was unavailable.",
-        disclaimer="This report is generated from the information you provided and is for educational/informational purposes only. It is not real estate, investment, or financial advice. Please consult licensed professionals before making decisions.",
-        manual_data=manual_data,
-        market_analysis=MarketAnalysis(
-            trends="Based on provided information",
-            comparables="Based on provided information",
-            appreciation_potential="Based on provided information",
-        ),
-        investment_potential=InvestmentPotential(
-            rental_income="Based on provided information",
-            cash_flow="Based on provided information",
-            roi_projections="Based on provided information",
-            appreciation_timeline="Based on provided information",
-        ),
-        risk_assessment=RiskAssessment(
-            market_risks=["Based on provided information"],
-            property_risks=["Based on provided information"],
-            mitigation_strategies=["Consider additional due diligence"],
-        ),
-        renovation_analysis=RenovationAnalysis(
-            estimated_costs="Based on provided information",
-            priority_improvements=["Property condition assessment needed"],
-            renovation_roi="Varies by market conditions",
-        ),
-        investment_recommendation=InvestmentRecommendation(
-            recommendation="Consider",
-            ideal_buyer="Based on provided information",
-            timeline="Based on provided information",
-        ),
-        strengths=["Property analysis completed"],
-        weaknesses=["Analysis based on provided information"],
-        hidden_issues=["Property condition unknown", "Additional research recommended"],
-        questions=[
-            "What is the current property condition?",
-            "Are there any recent renovations?",
-            "What is the rental history?",
-        ],
-        generated_at=datetime.now().isoformat(),
-    )
+    else:
+        # Fallback if LLM fails
+        return PropertyAnalysis(
+            property_address=address,
+            property_title=title,
+            user_id=user_id,
+            overall_score=70,
+            summary="Property analysis based on provided information. AI analysis was unavailable.",
+            disclaimer="This report is generated from the information you provided and is for educational/informational purposes only. It is not real estate, investment, or financial advice. Please consult licensed professionals before making decisions.",
+            manual_data=manual_data,
+            market_analysis=MarketAnalysis(
+                trends="Analysis based on provided property information only",
+                comparables="No comparable market data available",
+                appreciation_potential="Market analysis requires additional research",
+            ),
+            investment_potential=InvestmentPotential(
+                rental_income="Requires market research and property condition assessment",
+                cash_flow="Based on provided property details only",
+                roi_projections="Market analysis needed for accurate projections",
+                appreciation_timeline="Requires local market research",
+            ),
+            risk_assessment=RiskAssessment(
+                market_risks=["Market conditions require local research"],
+                property_risks=[
+                    "Property condition unknown",
+                    "Additional research recommended",
+                ],
+                mitigation_strategies=[
+                    "Conduct thorough due diligence and inspections"
+                ],
+            ),
+            renovation_analysis=RenovationAnalysis(
+                estimated_costs="Property condition assessment needed",
+                priority_improvements=["Based on property details provided"],
+                renovation_roi="Requires local market analysis",
+            ),
+            investment_recommendation=InvestmentRecommendation(
+                recommendation="Research",
+                ideal_buyer="Based on property characteristics",
+                timeline="Requires market research",
+            ),
+            strengths=["Property analysis completed"],
+            weaknesses=["Areas requiring additional research"],
+            hidden_issues=[
+                "Property condition unknown",
+                "Additional research recommended",
+            ],
+            questions=[
+                "What is the current property condition?",
+                "Are there any recent renovations?",
+                "What is the rental history?",
+                "What are the local market conditions?",
+                "What comparable properties have sold recently?",
+            ],
+            generated_at=datetime.now().isoformat(),
+        )
