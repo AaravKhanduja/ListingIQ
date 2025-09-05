@@ -27,7 +27,6 @@ export function SignInForm() {
   // Handle redirect after component potentially unmounts
   useEffect(() => {
     if (shouldRedirect) {
-      console.log('🚀 Redirecting from useEffect...');
       // Use window.location as fallback
       window.location.href = '/';
     }
@@ -52,35 +51,28 @@ export function SignInForm() {
     setIsLoading(true);
 
     try {
-      console.log('🔄 Starting signin process...');
       const { error } = await signIn(formData.email, formData.password);
 
       if (error) {
-        console.error('❌ Signin error:', error);
         setError(error.message || 'Sign in failed');
         return;
       }
-
-      console.log('✅ Signin successful, setting up redirect...');
 
       // Set a flag to redirect
       setShouldRedirect(true);
 
       // Also try immediate redirect
       try {
-        console.log('🚀 Attempting immediate redirect...');
         router.push('/');
-      } catch (redirectError) {
-        console.error('❌ Router redirect failed:', redirectError);
+      } catch {
+        // Silent fail
       }
 
       // Fallback redirect with timeout
       redirectTimeoutRef.current = setTimeout(() => {
-        console.log('🔄 Fallback redirect...');
         window.location.href = '/';
       }, 1000);
-    } catch (error) {
-      console.error('❌ Unexpected error:', error);
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);

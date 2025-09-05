@@ -25,7 +25,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-
   // Check if we're in development mode
   const isDevMode = process.env.NODE_ENV === 'development';
 
@@ -56,8 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (user) {
               setUser(user);
             }
-          } catch (error) {
-            console.error('Error checking session:', error);
+          } catch {
           } finally {
             setLoading(false);
           }
@@ -69,12 +67,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           try {
             const { onAuthStateChange } = await import('@/lib/supabase/auth');
             const { data } = onAuthStateChange((user: User | null) => {
-              console.log('Auth state change:', user?.email);
               setUser(user);
             });
             return data;
-          } catch (error) {
-            console.error('Error setting up auth listener:', error);
+          } catch {
           }
         };
 
@@ -125,8 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           // Don't set user here - the auth state listener will handle it
           return { error: null };
-        } catch (error) {
-          console.error('Signin error:', error);
+        } catch {
           return { error: new Error('Signin failed') };
         }
       } else {
@@ -168,8 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(user);
           }
           return { error: null };
-        } catch (error) {
-          console.error('Signup error:', error);
+        } catch {
           return { error: new Error('Signup failed') };
         }
       } else {
@@ -209,8 +203,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // For OAuth, we need to wait for the redirect and then check the session
         // The user state will be updated when the page reloads
         return { error: null };
-      } catch (error) {
-        console.error('Google signin error:', error);
+      } catch {
         return { error: new Error('Google signin failed') };
       }
     } else {
@@ -240,14 +233,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { signOut: supabaseSignOut } = await import('@/lib/supabase/auth');
         const { error } = await supabaseSignOut();
         if (error) {
-          console.error('Signout error:', error);
+          // Silent fail
         }
         // Clear user state regardless of error
         setUser(null);
         // Redirect to signin page
         window.location.href = '/auth/signin';
-      } catch (error) {
-        console.error('Signout failed:', error);
+      } catch {
         // Clear user state even if signout fails
         setUser(null);
         window.location.href = '/auth/signin';

@@ -49,14 +49,9 @@ export function ListingInputForm({
   });
 
   const handleAnalyze = () => {
-    console.log('🔍 handleAnalyze called');
-    console.log('📍 Property input:', propertyInput);
-    console.log('📝 Manual data:', manualData);
-
     setValidationError(null);
 
     if (propertyInput.trim() && (manualData.listing_description || '').trim()) {
-      console.log('✅ Proceeding with analysis');
 
       // Store both the address and manual data
       const analysisData = {

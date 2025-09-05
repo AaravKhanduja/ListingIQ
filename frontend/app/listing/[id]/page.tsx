@@ -106,8 +106,8 @@ export default function ListingPage() {
             if (parsedData.address === propertyAddress) {
               manualData = parsedData.manualData;
             }
-          } catch (e) {
-            console.error('Failed to parse stored property data:', e);
+          } catch {
+            // Silent fail
           }
         }
 
@@ -155,7 +155,6 @@ export default function ListingPage() {
           errorMessage.includes('No session found') ||
           errorMessage.includes('please sign in again')
         ) {
-          console.log('🔐 Authentication error detected, redirecting to signin...');
           window.location.href = '/auth/signin';
           return; // Don't set error state since we're redirecting
         }

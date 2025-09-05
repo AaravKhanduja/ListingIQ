@@ -16,8 +16,7 @@ export function Navigation() {
     setIsSigningOut(true);
     try {
       await signOut();
-    } catch (error) {
-      console.error('Signout failed:', error);
+    } catch {
       // Even if signout fails, try to redirect
       window.location.href = '/auth/signin';
     } finally {

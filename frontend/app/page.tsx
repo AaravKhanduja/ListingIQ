@@ -21,14 +21,9 @@ export default function HomePage() {
   }, [user, loading, router]);
 
   const handleAnalyze = async () => {
-    console.log('🏠 Home page handleAnalyze called');
-
     const currentPropertyData = localStorage.getItem('currentProperty');
 
-    console.log('📍 Current property data from localStorage:', currentPropertyData);
-
     if (!currentPropertyData || !currentPropertyData.trim()) {
-      console.error('❌ No property data found for analysis');
       return;
     }
 
@@ -37,19 +32,15 @@ export default function HomePage() {
       const { address, manualData } = parsedData;
 
       if (!address || !manualData?.listing_description) {
-        console.error('❌ Invalid property data structure');
         return;
       }
 
-      console.log('✅ Proceeding with analysis');
       setIsAnalyzing(true);
 
       // Use the property address as the listing ID (URL-encoded)
       const listingId = encodeURIComponent(address.trim());
-      console.log('🆔 Using property address as listing ID:', listingId);
       router.push(`/listing/${listingId}`);
-    } catch (error) {
-      console.error('❌ Error parsing property data:', error);
+    } catch {
       setIsAnalyzing(false);
     }
   };

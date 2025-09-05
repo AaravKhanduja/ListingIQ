@@ -19,11 +19,8 @@ export function ListingHeader({ propertyTitle, summary }: ListingHeaderProps) {
       setIsDownloading(true);
       const filename = `${propertyTitle.replace(/[^a-zA-Z0-9]/g, '_')}_analysis.pdf`;
 
-      console.log('Generating PDF...');
       await downloadTextPDF(filename);
-      console.log('PDF generation successful');
     } catch (error) {
-      console.error('Download failed:', error);
 
       // User-friendly error handling
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
