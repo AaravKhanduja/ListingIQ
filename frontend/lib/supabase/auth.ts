@@ -106,3 +106,51 @@ export function onAuthStateChange(callback: (user: User | null) => void) {
     callback(session?.user ?? null);
   });
 }
+
+export async function deleteAccount(userId: string): Promise<{ success: boolean; error?: string }> {
+  if (!isSupabaseConfigured()) {
+    return { success: false, error: 'Supabase is not configured' };
+  }
+
+  try {
+    // Get the current session to get the access token
+    const { data: { session }, error: sessionError } = await supabase!.auth.getSession();
+    
+    if (sessionError || !session) {
+      return { success: false, error: 'No active session found' };
+    }
+
+    // Call the backend API to delete the account
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const response = await fetch(`${backendUrl}/api/user/account`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+      return { success: false, error: errorData.detail || `HTTP ${response.status}` };
+    }
+
+    const result = await response.json();
+    
+    if (result.success) {
+      // Sign out the user after successful deletion
+      const { error: signOutError } = await supabase!.auth.signOut();
+      if (signOutError) {
+        console.error('Error signing out user:', signOutError);
+      }
+    }
+
+    return result;
+  } catch (error) {
+    console.error('Error deleting account:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error occurred' 
+    };
+  }
+}
