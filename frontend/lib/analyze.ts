@@ -100,7 +100,7 @@ export interface AnalyzeResponse {
 // ---------- Fetch helpers (UTC-safe) ----------
 
 const API_BASE =
-  process.env.NEXT_PUBLIC_ANALYZE_BASE_URL?.replace(/\/+$/, "") ||
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") ||
   "http://localhost:8000";
 
 // Epoch helpers (UTC by definition)
