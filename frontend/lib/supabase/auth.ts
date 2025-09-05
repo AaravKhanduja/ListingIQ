@@ -113,41 +113,31 @@ export async function deleteAccount(userId: string): Promise<{ success: boolean;
   }
 
   try {
-    // Get the current session to get the access token
-    const { data: { session }, error: sessionError } = await supabase!.auth.getSession();
-    
-    if (sessionError || !session) {
-      return { success: false, error: 'No active session found' };
+    // First, delete all user's saved analyses directly from Supabase
+    const { error: deleteAnalysesError } = await supabase!
+      .from('saved_analyses')
+      .delete()
+      .eq('user_id', userId);
+
+    if (deleteAnalysesError) {
+      return { success: false, error: `Failed to delete user data: ${deleteAnalysesError.message}` };
     }
 
-    // Call the backend API to delete the account
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    const response = await fetch(`${backendUrl}/api/user/account`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${session.access_token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
-      return { success: false, error: errorData.detail || `HTTP ${response.status}` };
+    // Also delete from analyses table if it exists
+    try {
+      await supabase!.from('analyses').delete().eq('user_id', userId).execute();
+    } catch (e) {
+      // Ignore errors from analyses table (might not exist)
     }
 
-    const result = await response.json();
-    
-    if (result.success) {
-      // Sign out the user after successful deletion
-      const { error: signOutError } = await supabase!.auth.signOut();
-      if (signOutError) {
-        console.error('Error signing out user:', signOutError);
-      }
+    // Sign out the user (this will clear the session)
+    const { error: signOutError } = await supabase!.auth.signOut();
+    if (signOutError) {
+      return { success: false, error: `Failed to sign out: ${signOutError.message}` };
     }
 
-    return result;
+    return { success: true };
   } catch (error) {
-    console.error('Error deleting account:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error occurred' 
