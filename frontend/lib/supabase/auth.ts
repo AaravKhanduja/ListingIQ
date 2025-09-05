@@ -125,8 +125,8 @@ export async function deleteAccount(userId: string): Promise<{ success: boolean;
 
     // Also delete from analyses table if it exists
     try {
-      await supabase!.from('analyses').delete().eq('user_id', userId).execute();
-    } catch (e) {
+      await supabase!.from('analyses').delete().eq('user_id', userId);
+    } catch {
       // Ignore errors from analyses table (might not exist)
     }
 
