@@ -11,24 +11,15 @@ if [ ! -f "package.json" ] && [ ! -f "frontend/package.json" ]; then
     exit 1
 fi
 
-# Check if certificates exist
-if [ ! -f "frontend/localhost+2.pem" ] || [ ! -f "frontend/localhost+2-key.pem" ]; then
-    echo "❌ Error: HTTPS certificates not found"
-    echo "Please run: cd frontend && mkcert localhost 127.0.0.1 ::1"
-    exit 1
-fi
-
-# Check if environment files exist
+# Create environment files if they don't exist
 if [ ! -f "frontend/.env.local" ]; then
-    echo "❌ Error: Frontend .env.local not found"
-    echo "Please create frontend/.env.local with your Supabase credentials"
-    exit 1
+    echo "📝 Creating frontend/.env.local..."
+    cp frontend/env.example frontend/.env.local
 fi
 
 if [ ! -f "backend/.env" ]; then
-    echo "❌ Error: Backend .env not found"
-    echo "Please create backend/.env with your Supabase credentials"
-    exit 1
+    echo "📝 Creating backend/.env..."
+    cp backend/env.example backend/.env
 fi
 
 echo "✅ All prerequisites found!"
@@ -40,18 +31,101 @@ if [ -f "frontend/package.json" ]; then
 fi
 
 if [ -f "backend/pyproject.toml" ]; then
-    cd backend && pip install -e . && cd ..
+    cd backend
+    if command -v poetry &> /dev/null; then
+        poetry install
+    elif command -v pip &> /dev/null; then
+        pip install -e .
+    else
+        echo "⚠️  Neither Poetry nor pip found. Please install Python dependencies manually."
+    fi
+    cd ..
+fi
+
+# Check for OpenAI key and set up Ollama if not found
+if ! grep -q "OPENAI_API_KEY=sk-" backend/.env 2>/dev/null; then
+    echo ""
+    echo "⚠️  No OpenAI API key found - setting up Ollama for local LLM..."
+    
+    # Check if Ollama is installed
+    if ! command -v ollama &> /dev/null; then
+        echo "📦 Installing Ollama..."
+        
+        # Detect OS and install Ollama
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            # macOS
+            if command -v brew &> /dev/null; then
+                brew install ollama
+            else
+                echo "❌ Homebrew not found. Please install Ollama manually:"
+                echo "   Visit: https://ollama.ai/download"
+                exit 1
+            fi
+        elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+            # Linux
+            curl -fsSL https://ollama.ai/install.sh | sh
+        else
+            echo "❌ Unsupported OS. Please install Ollama manually:"
+            echo "   Visit: https://ollama.ai/download"
+            exit 1
+        fi
+    fi
+    
+    echo "🚀 Starting Ollama service..."
+    # Start Ollama in background
+    ollama serve &
+    OLLAMA_PID=$!
+    
+    # Wait a moment for Ollama to start
+    sleep 3
+    
+    echo "📥 Pulling Llama model..."
+    ollama pull llama3.2:3b
+    
+    echo "✅ Ollama setup complete!"
+    echo "   - Ollama is running in background (PID: $OLLAMA_PID)"
+    echo "   - Model 'llama3.2:3b' is ready to use"
+    echo ""
 fi
 
 echo ""
-echo "🎉 Setup complete! You can now run:"
+echo "🎉 Setup complete! Starting development servers..."
 echo ""
-echo "Backend (Terminal 1):"
-echo "  cd backend && python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
+
+# Start backend in background
+echo "🚀 Starting backend server..."
+cd backend
+if command -v poetry &> /dev/null; then
+    poetry run python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 &
+else
+    python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 &
+fi
+BACKEND_PID=$!
+cd ..
+
+# Wait a moment for backend to start
+sleep 2
+
+# Start frontend
+echo "🚀 Starting frontend server..."
+cd frontend
+npm run dev &
+FRONTEND_PID=$!
+cd ..
+
 echo ""
-echo "Frontend with HTTPS (Terminal 2):"
-echo "  cd frontend && npm run dev:https"
+echo "✅ Development servers started!"
+echo "   - Backend: http://localhost:8000 (PID: $BACKEND_PID)"
+echo "   - Frontend: http://localhost:3000 (PID: $FRONTEND_PID)"
+if [ ! -z "$OLLAMA_PID" ]; then
+    echo "   - Ollama: http://localhost:11434 (PID: $OLLAMA_PID)"
+fi
 echo ""
-echo "Then visit: https://localhost:3000"
+echo "🔧 Development environment ready!"
+echo "   Visit: http://localhost:3000"
 echo ""
-echo "🔐 HTTPS is enabled - Supabase authentication will work properly!"
+echo "💡 To stop all services:"
+echo "   kill $BACKEND_PID $FRONTEND_PID"
+if [ ! -z "$OLLAMA_PID" ]; then
+    echo "   kill $OLLAMA_PID"
+fi

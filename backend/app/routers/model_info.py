@@ -4,15 +4,15 @@ from app.config import settings
 
 router = APIRouter(prefix="/model-info", tags=["model-info"])
 
-# Create a global LLM service instance to get model info
-llm_service = LLMService()
-
 
 @router.get("/")
 async def get_model_info():
     """
     Get current LLM model information
     """
+    # Create LLM service instance when needed (after env vars are loaded)
+    llm_service = LLMService()
+
     return {
         "provider": llm_service.provider.value,
         "model": llm_service.model,
