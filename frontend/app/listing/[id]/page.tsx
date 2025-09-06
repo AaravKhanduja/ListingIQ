@@ -658,29 +658,33 @@ export default function ListingPage() {
 
           {/* Areas to Research */}
           {listingData.weaknesses?.length > 0 && (
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl p-6 shadow-sm">
-              <div className="flex items-center gap-3 mb-5">
-                <div className="p-2.5 bg-amber-100 rounded-lg">
-                  <AlertTriangle className="h-7 w-7 text-amber-600" />
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl p-4 sm:p-6 shadow-sm">
+              <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-5">
+                <div className="p-2 sm:p-2.5 bg-amber-100 rounded-lg">
+                  <AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7 text-amber-600" />
                 </div>
-                <h3 className="font-bold text-amber-800 text-2xl">Areas to Research</h3>
+                <h3 className="font-bold text-amber-800 text-lg sm:text-xl lg:text-2xl">
+                  Areas to Research
+                </h3>
               </div>
-              <ul className="space-y-4 mb-5">
+              <ul className="space-y-3 sm:space-y-4 mb-4 sm:mb-5">
                 {listingData.weaknesses.map((weakness, i) => (
                   <li
                     key={i}
-                    className="text-base text-amber-700 flex items-start gap-3 leading-relaxed"
+                    className="text-sm sm:text-base text-amber-700 flex items-start gap-2 sm:gap-3 leading-relaxed"
                   >
-                    <span className="text-amber-500 mt-0.5 text-xl font-bold flex-shrink-0">
+                    <span className="text-amber-500 mt-0.5 text-lg sm:text-xl font-bold flex-shrink-0">
                       ⚠
                     </span>
                     <span className="font-medium">{weakness}</span>
                   </li>
                 ))}
               </ul>
-              <div className="bg-amber-100 rounded-lg p-4 border border-amber-200">
-                <p className="text-base font-semibold text-amber-800 mb-2">🔍 Research Priority:</p>
-                <p className="text-base text-amber-700 leading-relaxed font-medium">
+              <div className="bg-amber-100 rounded-lg p-3 sm:p-4 border border-amber-200">
+                <p className="text-sm sm:text-base font-semibold text-amber-800 mb-2">
+                  🔍 Research Priority:
+                </p>
+                <p className="text-sm sm:text-base text-amber-700 leading-relaxed font-medium">
                   Dive deeper into these areas to understand potential impacts on your decision.
                 </p>
               </div>
@@ -689,27 +693,31 @@ export default function ListingPage() {
 
           {/* Hidden Risks */}
           {listingData.hiddenIssues?.length > 0 && (
-            <div className="bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-200 rounded-xl p-6 shadow-sm">
-              <div className="flex items-center gap-3 mb-5">
-                <div className="p-2.5 bg-red-100 rounded-lg">
-                  <AlertTriangle className="h-7 w-7 text-red-600" />
+            <div className="bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-200 rounded-xl p-4 sm:p-6 shadow-sm">
+              <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-5">
+                <div className="p-2 sm:p-2.5 bg-red-100 rounded-lg">
+                  <AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7 text-red-600" />
                 </div>
-                <h3 className="font-bold text-red-800 text-2xl">Hidden Risks & Issues</h3>
+                <h3 className="font-bold text-red-800 text-lg sm:text-xl lg:text-2xl">
+                  Hidden Risks & Issues
+                </h3>
               </div>
-              <ul className="space-y-4 mb-5">
+              <ul className="space-y-3 sm:space-y-4 mb-4 sm:mb-5">
                 {listingData.hiddenIssues.map((issue, i) => (
                   <li
                     key={i}
-                    className="text-base text-red-700 flex items-start gap-3 leading-relaxed"
+                    className="text-sm sm:text-base text-red-700 flex items-start gap-2 sm:gap-3 leading-relaxed"
                   >
-                    <span className="text-red-500 mt-0.5 text-xl font-bold flex-shrink-0">🚨</span>
+                    <span className="text-red-500 mt-0.5 text-lg sm:text-xl font-bold flex-shrink-0">
+                      🚨
+                    </span>
                     <span className="font-medium">{issue}</span>
                   </li>
                 ))}
               </ul>
-              <div className="bg-red-100 rounded-lg p-4 border border-red-200">
-                <p className="text-base font-semibold text-red-800 mb-2">⚠️ Critical:</p>
-                <p className="text-base text-red-700 leading-relaxed font-medium">
+              <div className="bg-red-100 rounded-lg p-3 sm:p-4 border border-red-200">
+                <p className="text-sm sm:text-base font-semibold text-red-800 mb-2">⚠️ Critical:</p>
+                <p className="text-sm sm:text-base text-red-700 leading-relaxed font-medium">
                   These issues require immediate attention and may significantly impact your
                   decision.
                 </p>
@@ -719,27 +727,33 @@ export default function ListingPage() {
 
           {/* Questions for Realtor */}
           {listingData.questions?.length > 0 && (
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 shadow-sm">
-              <div className="flex items-center gap-3 mb-5">
-                <div className="p-2.5 bg-blue-100 rounded-lg">
-                  <Target className="h-7 w-7 text-blue-600" />
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4 sm:p-6 shadow-sm">
+              <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-5">
+                <div className="p-2 sm:p-2.5 bg-blue-100 rounded-lg">
+                  <Target className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7 text-blue-600" />
                 </div>
-                <h3 className="font-bold text-blue-800 text-2xl">Questions to Ask Your Realtor</h3>
+                <h3 className="font-bold text-blue-800 text-lg sm:text-xl lg:text-2xl">
+                  Questions to Ask Your Realtor
+                </h3>
               </div>
-              <ul className="space-y-4 mb-5">
+              <ul className="space-y-3 sm:space-y-4 mb-4 sm:mb-5">
                 {listingData.questions.map((question, i) => (
                   <li
                     key={i}
-                    className="text-base text-blue-700 flex items-start gap-3 leading-relaxed"
+                    className="text-sm sm:text-base text-blue-700 flex items-start gap-2 sm:gap-3 leading-relaxed"
                   >
-                    <span className="text-blue-500 mt-0.5 text-xl font-bold flex-shrink-0">❓</span>
+                    <span className="text-blue-500 mt-0.5 text-lg sm:text-xl font-bold flex-shrink-0">
+                      ❓
+                    </span>
                     <span className="font-medium">{question}</span>
                   </li>
                 ))}
               </ul>
-              <div className="bg-blue-100 rounded-lg p-4 border border-blue-200">
-                <p className="text-base font-semibold text-blue-800 mb-2">💡 Due Diligence:</p>
-                <p className="text-base text-blue-700 leading-relaxed font-medium">
+              <div className="bg-blue-100 rounded-lg p-3 sm:p-4 border border-blue-200">
+                <p className="text-sm sm:text-base font-semibold text-blue-800 mb-2">
+                  💡 Due Diligence:
+                </p>
+                <p className="text-sm sm:text-base text-blue-700 leading-relaxed font-medium">
                   These questions will help you gather critical information for your decision-making
                   process.
                 </p>
