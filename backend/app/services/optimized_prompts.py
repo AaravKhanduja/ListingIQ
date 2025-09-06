@@ -22,7 +22,8 @@ Size: {manual_data.square_feet if manual_data and manual_data.square_feet else "
 Beds/Baths: {manual_data.bedrooms if manual_data and manual_data.bedrooms else "?"}/{manual_data.bathrooms if manual_data and manual_data.bathrooms else "?"}
 Description: {manual_data.listing_description[:150] if manual_data and manual_data.listing_description else "None"}
 
-Return JSON: {{"summary": "2-3 sentence summary", "overall_score": 75}}"""
+IMPORTANT: Return ONLY valid JSON in this exact format:
+{{"summary": "2-3 sentence summary", "overall_score": 75}}"""
 
     @staticmethod
     def strengths_prompt(
@@ -34,7 +35,8 @@ Type: {manual_data.property_type if manual_data and manual_data.property_type el
 Price: {manual_data.price if manual_data and manual_data.price else "Not provided"}
 Description: {manual_data.listing_description[:100] if manual_data and manual_data.listing_description else "None"}
 
-Return JSON: {{"strengths": ["strength1", "strength2", "strength3", "strength4"]}}"""
+IMPORTANT: Return ONLY valid JSON in this exact format:
+{{"strengths": ["strength1", "strength2", "strength3", "strength4"]}}"""
 
     @staticmethod
     def research_areas_prompt(
@@ -46,7 +48,8 @@ Type: {manual_data.property_type if manual_data and manual_data.property_type el
 Price: {manual_data.price if manual_data and manual_data.price else "Not provided"}
 Description: {manual_data.listing_description[:100] if manual_data and manual_data.listing_description else "None"}
 
-Return JSON: {{"weaknesses": ["area1", "area2", "area3", "area4"]}}"""
+IMPORTANT: Return ONLY valid JSON in this exact format:
+{{"weaknesses": ["area1", "area2", "area3", "area4"]}}"""
 
     @staticmethod
     def risks_prompt(address: str, manual_data: Optional[ManualPropertyData]) -> str:
@@ -56,7 +59,8 @@ Type: {manual_data.property_type if manual_data and manual_data.property_type el
 Price: {manual_data.price if manual_data and manual_data.price else "Not provided"}
 Description: {manual_data.listing_description[:100] if manual_data and manual_data.listing_description else "None"}
 
-Return JSON: {{"hidden_risks": ["risk1", "risk2", "risk3", "risk4"]}}"""
+IMPORTANT: Return ONLY valid JSON in this exact format:
+{{"hidden_risks": ["risk1", "risk2", "risk3", "risk4"]}}"""
 
     @staticmethod
     def questions_prompt(
@@ -68,7 +72,8 @@ Type: {manual_data.property_type if manual_data and manual_data.property_type el
 Price: {manual_data.price if manual_data and manual_data.price else "Not provided"}
 Description: {manual_data.listing_description[:100] if manual_data and manual_data.listing_description else "None"}
 
-Return JSON: {{"questions": ["question1", "question2", "question3", "question4", "question5", "question6"]}}"""
+IMPORTANT: Return ONLY valid JSON in this exact format:
+{{"questions": ["question1", "question2", "question3", "question4", "question5", "question6"]}}"""
 
     @staticmethod
     def market_analysis_prompt(

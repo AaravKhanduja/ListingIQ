@@ -84,11 +84,16 @@ class LLMService:
 
     async def generate_analysis(self, prompt: str) -> Optional[Dict[str, Any]]:
         """Generate property analysis using the configured LLM provider"""
+        print(f"🤖 Starting LLM generation with {self.provider.value}")
         try:
             if self.provider == LLMProvider.OPENAI:
-                return await self._generate_openai(prompt)
+                result = await self._generate_openai(prompt)
+                print(f"🤖 OpenAI result: {result}")
+                return result
             elif self.provider == LLMProvider.OLLAMA:
-                return await self._generate_ollama(prompt)
+                result = await self._generate_ollama(prompt)
+                print(f"🤖 Ollama result: {result}")
+                return result
         except Exception as e:
             print(f"❌ LLM generation error ({self.provider.value}): {e}")
             return None
@@ -152,21 +157,32 @@ class LLMService:
             return None
 
     def _parse_json_response(self, analysis_text: str) -> Optional[Dict[str, Any]]:
-        """Parse JSON from LLM response"""
+        """Parse JSON from LLM response with improved error handling"""
         try:
+            # Clean the response text
+            analysis_text = analysis_text.strip()
+
             # Look for JSON in the response
             json_start = analysis_text.find("{")
             json_end = analysis_text.rfind("}") + 1
 
             if json_start != -1 and json_end != 0:
-                analysis_json = json.loads(analysis_text[json_start:json_end])
+                json_text = analysis_text[json_start:json_end]
+                analysis_json = json.loads(json_text)
+                print(f"✅ Successfully parsed JSON: {list(analysis_json.keys())}")
                 return analysis_json
             else:
-                print("❌ No JSON found in LLM response")
+                print(
+                    f"❌ No JSON found in LLM response. Text: {analysis_text[:200]}..."
+                )
                 return None
 
         except json.JSONDecodeError as e:
             print(f"❌ Failed to parse JSON from LLM response: {e}")
+            print(f"Raw response: {analysis_text[:200]}...")
+            return None
+        except Exception as e:
+            print(f"❌ Unexpected error parsing JSON: {e}")
             return None
 
     def get_provider_info(self) -> Dict[str, str]:

@@ -160,7 +160,7 @@ export class StreamingAnalysisClient {
                   newState.weaknesses = Array.isArray(weaknesses) ? weaknesses.filter(w => typeof w === 'string') : [];
                 }
                 break;
-              case 'hidden_risks':
+              case 'risks':
                 if (data.data && typeof data.data === 'object' && 'hidden_risks' in data.data) {
                   const risks = (data.data as { hidden_risks?: unknown }).hidden_risks;
                   newState.hiddenRisks = Array.isArray(risks) ? risks.filter(r => typeof r === 'string') : [];

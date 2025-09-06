@@ -29,7 +29,7 @@ import {
   Users,
 } from 'lucide-react';
 
-import { analyzeListing, AnalyzeRequest, ManualPropertyData } from '@/lib/analyze';
+import { analyzeListing, ManualPropertyData } from '@/lib/analyze';
 import { useStreamingAnalysis, StreamingAnalysisState } from '@/lib/analyze-streaming';
 import { saveAnalysis } from '@/lib/save-analysis-hybrid';
 import { useAuth } from '@/lib/auth';
@@ -337,9 +337,17 @@ export default function ListingPage() {
         }
 
         // Get user token for authentication
-        const { getSession } = await import('@/lib/supabase/auth');
-        const session = await getSession();
-        const userToken = session?.access_token;
+        let userToken: string | undefined;
+
+        if (process.env.NODE_ENV === 'development') {
+          // Development mode: use a dummy token
+          userToken = 'dev-token';
+        } else {
+          // Production mode: get real Supabase session
+          const { getSession } = await import('@/lib/supabase/auth');
+          const session = await getSession();
+          userToken = session?.access_token;
+        }
 
         if (!userToken) {
           setError('Authentication required');
@@ -415,16 +423,17 @@ export default function ListingPage() {
 
   // Update listing data as streaming results come in
   useEffect(() => {
-    if (streamingState.isComplete && streamingState.summary) {
+    if (streamingState.isComplete) {
       const newAnalysis: ListingData = {
         propertyTitle: decodeURIComponent(String(id)),
-        summary: streamingState.summary.summary || '',
+        summary:
+          streamingState.summary?.summary || 'Analysis completed based on provided information.',
         executiveSummary: undefined,
         disclaimer:
           'This report is generated from the information you provided and is for educational/informational purposes only. It is not real estate, investment, or financial advice. Please consult licensed professionals before making decisions.',
         manualData: undefined, // Will be populated from localStorage
         score: {
-          composite: streamingState.summary.overall_score ?? 75,
+          composite: streamingState.summary?.overall_score ?? 75,
         },
         marketAnalysis: undefined,
         investmentPotential: undefined,
@@ -472,10 +481,10 @@ export default function ListingPage() {
     );
   }
 
-  // Show loading only if we're analyzing AND don't have listing data yet
-  if (isAnalyzing && !listingData) return <StreamingLoadingState streamingState={streamingState} />;
-
-  if (!listingData) return null;
+  // Show loading if we're analyzing OR if we don't have listing data yet
+  if (isAnalyzing || !listingData) {
+    return <StreamingLoadingState streamingState={streamingState} />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
