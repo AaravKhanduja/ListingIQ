@@ -274,9 +274,11 @@ export default function ListingPage() {
     const startStreamingAnalysis = async () => {
       if (!id || hasStartedAnalysis || listingData) return;
 
+      const propertyAddress = decodeURIComponent(String(id));
+      let manualData: ManualPropertyData | undefined;
+
       try {
         setError(null);
-        const propertyAddress = decodeURIComponent(String(id));
 
         // Check if we already have analysis data for this property
         const analysisKey = `analysis_${propertyAddress}`;
@@ -295,7 +297,6 @@ export default function ListingPage() {
 
         // Get the manual data from localStorage
         const currentPropertyData = localStorage.getItem('currentProperty');
-        let manualData: ManualPropertyData | undefined;
 
         if (currentPropertyData) {
           try {
@@ -334,6 +335,47 @@ export default function ListingPage() {
         ) {
           window.location.href = '/auth/signin';
           return;
+        }
+
+        // If streaming fails, try regular analysis as fallback
+        if (errorMessage.includes('Analysis request failed')) {
+          console.log('Streaming failed, falling back to regular analysis...');
+          try {
+            const fallbackResponse = await analyzeListing({
+              property_address: decodeURIComponent(String(id)),
+              property_title: decodeURIComponent(String(id)),
+              manual_data: manualData,
+            });
+
+            if (fallbackResponse.success && fallbackResponse.analysis) {
+              // Convert PropertyAnalysis to ListingData format
+              const convertedAnalysis: ListingData = {
+                propertyTitle: fallbackResponse.analysis.property_title,
+                summary: fallbackResponse.analysis.summary,
+                executiveSummary: fallbackResponse.analysis.executive_summary,
+                disclaimer: fallbackResponse.analysis.disclaimer,
+                manualData: fallbackResponse.analysis.manual_data,
+                score: {
+                  composite: fallbackResponse.analysis.overall_score,
+                },
+                marketAnalysis: fallbackResponse.analysis.market_analysis,
+                investmentPotential: fallbackResponse.analysis.investment_potential,
+                riskAssessment: fallbackResponse.analysis.risk_assessment,
+                renovationAnalysis: fallbackResponse.analysis.renovation_analysis,
+                strengths: fallbackResponse.analysis.strengths,
+                weaknesses: fallbackResponse.analysis.weaknesses,
+                hiddenIssues: fallbackResponse.analysis.hidden_issues,
+                questions: fallbackResponse.analysis.questions,
+                generatedAt: fallbackResponse.analysis.generated_at || new Date().toISOString(),
+              };
+
+              setListingData(convertedAnalysis);
+              setHasStartedAnalysis(true);
+              return;
+            }
+          } catch (fallbackError) {
+            console.error('Fallback analysis also failed:', fallbackError);
+          }
         }
 
         setError(errorMessage);
