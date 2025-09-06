@@ -107,7 +107,7 @@ export function onAuthStateChange(callback: (user: User | null) => void) {
   });
 }
 
-export async function deleteAccount(userId: string): Promise<{ success: boolean; error?: string }> {
+export async function deleteAccount(_userId: string): Promise<{ success: boolean; error?: string }> {
   if (!isSupabaseConfigured()) {
     return { success: false, error: 'Supabase is not configured' };
   }

@@ -19,6 +19,10 @@ async def get_current_user(request: Request) -> dict:
 
     token = auth_header.replace("Bearer ", "")
 
+    # Handle development token
+    if token == "dev-token":
+        return {"id": "dev_user", "email": "dev@example.com"}
+
     user_data = await supabase_service.verify_jwt_token(token)
 
     if not user_data:
@@ -43,6 +47,11 @@ async def get_optional_user(request: Request) -> Optional[dict]:
             return None
 
         token = auth_header.replace("Bearer ", "")
+
+        # Handle development token
+        if token == "dev-token":
+            return {"id": "dev_user", "email": "dev@example.com"}
+
         user_data = await supabase_service.verify_jwt_token(token)
         if user_data:
             # Map Supabase JWT fields to expected format

@@ -157,7 +157,7 @@ export async function getSavedAnalysesFromSupabase(
 
 export async function deleteAnalysisFromSupabase(
   analysisId: string,
-  userId: string
+  _userId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
     if (!supabase) {
@@ -219,7 +219,7 @@ export async function isAnalysisSavedInSupabase(
     }
 
     return !!data;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
