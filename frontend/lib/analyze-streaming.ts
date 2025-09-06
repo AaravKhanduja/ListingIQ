@@ -25,7 +25,6 @@ export interface StreamingAnalysisState {
 }
 
 export class StreamingAnalysisClient {
-  private eventSource: EventSource | null = null;
   private onUpdate: (updater: (prev: StreamingAnalysisState) => StreamingAnalysisState) => void;
   private onError: (error: string) => void;
 
@@ -66,12 +65,10 @@ export class StreamingAnalysisClient {
     }));
 
     try {
-      // Create EventSource for Server-Sent Events
-      const url = new URL('/api/analyze/stream', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000');
+      // Send the analysis request via POST to start streaming
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const url = new URL('/api/analyze/stream', baseUrl);
       
-      this.eventSource = new EventSource(url.toString());
-      
-      // Send the analysis request via POST first
       const response = await fetch(url.toString(), {
         method: 'POST',
         headers: {
@@ -82,25 +79,45 @@ export class StreamingAnalysisClient {
       });
 
       if (!response.ok) {
-        throw new Error(`Analysis request failed: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('Analysis request failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          url: url.toString(),
+          error: errorText
+        });
+        throw new Error(`Analysis request failed: ${response.status} ${response.statusText}`);
       }
 
-      // Handle incoming events
-      this.eventSource.onmessage = (event) => {
-        try {
-          const data: StreamingAnalysisSection = JSON.parse(event.data);
-          this.handleStreamEvent(data);
-        } catch (error) {
-          console.error('Error parsing stream event:', error);
-          this.onError('Failed to parse analysis data');
-        }
-      };
+      // Handle streaming response
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('No response body available for streaming');
+      }
 
-      this.eventSource.onerror = (error) => {
-        console.error('EventSource error:', error);
-        this.onError('Connection to analysis service lost');
-        this.cleanup();
-      };
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data: StreamingAnalysisSection = JSON.parse(line.slice(6));
+              this.handleStreamEvent(data);
+            } catch (error) {
+              console.error('Error parsing stream event:', error);
+              this.onError('Failed to parse analysis data');
+            }
+          }
+        }
+      }
 
     } catch (error) {
       this.onError(error instanceof Error ? error.message : 'Failed to start analysis');
@@ -174,10 +191,8 @@ export class StreamingAnalysisClient {
   }
 
   cleanup() {
-    if (this.eventSource) {
-      this.eventSource.close();
-      this.eventSource = null;
-    }
+    // No longer using EventSource, so no cleanup needed
+    // The fetch stream will be automatically cleaned up when the promise resolves
   }
 }
 
