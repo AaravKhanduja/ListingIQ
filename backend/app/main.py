@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from app.routers import analyze, user
+from app.routers import analyze, user, analyze_streaming, websocket
 from app.middleware.rate_limit import rate_limit_middleware
 from app.middleware.validation import validate_request_middleware
 from app.services.logger import logger
@@ -86,7 +86,27 @@ async def validate_request(request: Request, call_next):
 
 
 app.include_router(analyze.router, prefix="/api")
+app.include_router(analyze_streaming.router, prefix="/api")
+app.include_router(websocket.router, prefix="/api")
 app.include_router(user.router, prefix="/api")
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services on startup"""
+    from app.services.async_processor import async_processor
+
+    await async_processor.start()
+    logger.logger.info("Async analysis processor started")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup services on shutdown"""
+    from app.services.async_processor import async_processor
+
+    await async_processor.stop()
+    logger.logger.info("Async analysis processor stopped")
 
 
 @app.get("/health")
