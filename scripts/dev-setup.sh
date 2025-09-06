@@ -1,102 +1,57 @@
 #!/bin/bash
 
-# ListingIQ Development Setup Script
-# Simple, focused setup for development
-
+# ListingIQ Local Development Setup
 set -e
 
-echo "🚀 Setting up ListingIQ development environment..."
+echo "🚀 Setting up ListingIQ for local development..."
 
 # Check if we're in the right directory
-if [ ! -f "pyproject.toml" ] && [ ! -f "package.json" ]; then
-    echo "❌ Please run this script from the ListingIQ project root directory"
+if [ ! -f "package.json" ] && [ ! -f "frontend/package.json" ]; then
+    echo "❌ Error: Please run this script from the project root directory"
     exit 1
 fi
 
+# Check if certificates exist
+if [ ! -f "frontend/localhost+2.pem" ] || [ ! -f "frontend/localhost+2-key.pem" ]; then
+    echo "❌ Error: HTTPS certificates not found"
+    echo "Please run: cd frontend && mkcert localhost 127.0.0.1 ::1"
+    exit 1
+fi
+
+# Check if environment files exist
+if [ ! -f "frontend/.env.local" ]; then
+    echo "❌ Error: Frontend .env.local not found"
+    echo "Please create frontend/.env.local with your Supabase credentials"
+    exit 1
+fi
+
+if [ ! -f "backend/.env" ]; then
+    echo "❌ Error: Backend .env not found"
+    echo "Please create backend/.env with your Supabase credentials"
+    exit 1
+fi
+
+echo "✅ All prerequisites found!"
+
+# Install dependencies if needed
 echo "📦 Installing dependencies..."
-
-# Backend setup
-if [ -d "backend" ]; then
-    echo "🔧 Setting up backend..."
-    cd backend
-    
-    # Check if Poetry is installed
-    if command -v poetry &> /dev/null; then
-        echo "Installing Python dependencies with Poetry..."
-        poetry install
-    else
-        echo "⚠️  Poetry not found. Please install Poetry first:"
-        echo "   curl -sSL https://install.python-poetry.org | python3 -"
-        exit 1
-    fi
-    
-    # Create .env file if it doesn't exist
-    if [ ! -f ".env" ]; then
-        echo "Creating .env file..."
-        cp env.example .env
-        echo "✅ Created .env file - please configure your environment variables"
-    fi
-    
-    cd ..
-else
-    echo "❌ Backend directory not found"
-    exit 1
+if [ -f "frontend/package.json" ]; then
+    cd frontend && npm install && cd ..
 fi
 
-# Frontend setup
-if [ -d "frontend" ]; then
-    echo "🎨 Setting up frontend..."
-    cd frontend
-    
-    echo "Installing Node.js dependencies..."
-    npm install
-    
-    # Create .env.local file if it doesn't exist
-    if [ ! -f ".env.local" ]; then
-        echo "Creating .env.local file..."
-        cp env.example .env.local
-        echo "✅ Created .env.local file - please configure your environment variables"
-    fi
-    
-    cd ..
-else
-    echo "❌ Frontend directory not found"
-    exit 1
-fi
-
-# Ollama setup (optional)
-echo "🦙 Setting up Ollama (optional - for local LLM)..."
-if command -v ollama &> /dev/null; then
-    echo "Ollama found. Starting service..."
-    ollama serve &
-    sleep 3
-    
-    # Check if model is available
-    if ollama list | grep -q "llama3.2:3b"; then
-        echo "✅ Model llama3.2:3b is available"
-    else
-        echo "Downloading model llama3.2:3b..."
-        ollama pull llama3.2:3b
-        echo "✅ Model downloaded"
-    fi
-else
-    echo "⚠️  Ollama not found. Install from https://ollama.ai for local LLM support"
-    echo "   Or use OpenAI API key in backend/.env"
+if [ -f "backend/pyproject.toml" ]; then
+    cd backend && pip install -e . && cd ..
 fi
 
 echo ""
-echo "🎉 Development setup complete!"
+echo "🎉 Setup complete! You can now run:"
 echo ""
-echo "📋 Next steps:"
-echo "1. Configure your environment variables in .env and .env.local files"
-echo "2. Start development servers:"
+echo "Backend (Terminal 1):"
+echo "  cd backend && python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
 echo ""
-echo "   # Terminal 1: Backend"
-echo "   cd backend && poetry run uvicorn app.main:app --reload"
+echo "Frontend with HTTPS (Terminal 2):"
+echo "  cd frontend && npm run dev:https"
 echo ""
-echo "   # Terminal 2: Frontend"
-echo "   cd frontend && npm run dev"
+echo "Then visit: https://localhost:3000"
 echo ""
-echo "3. Open http://localhost:3000 in your browser"
-echo ""
-echo "📚 See README.md for detailed instructions" 
+echo "🔐 HTTPS is enabled - Supabase authentication will work properly!"
