@@ -93,30 +93,34 @@ function StreamingLoadingState({ streamingState }: { streamingState: StreamingAn
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
       <Navigation />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Back */}
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <Link href="/">
-            <Button variant="outline">
-              <ArrowLeft className="h-4 w-4 mr-2" />
+            <Button variant="outline" className="text-xs sm:text-sm">
+              <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
               Back to Search
             </Button>
           </Link>
         </div>
 
         {/* Title */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Property Analysis</h1>
-          <p className="text-base text-gray-700 leading-relaxed font-medium">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+            Property Analysis
+          </h1>
+          <p className="text-sm sm:text-base text-gray-700 leading-relaxed font-medium">
             Generating expert analysis based on the information you provided...
           </p>
         </div>
 
         {/* Progress Bar */}
-        <div className="mb-8 p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Analysis Progress</h3>
-            <span className="text-sm text-gray-600">{Math.round(progress)}% complete</span>
+        <div className="mb-6 sm:mb-8 p-4 sm:p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900">Analysis Progress</h3>
+            <span className="text-xs sm:text-sm text-gray-600">
+              {Math.round(progress)}% complete
+            </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-3 mb-4 relative overflow-hidden">
             <div
@@ -154,25 +158,29 @@ function StreamingLoadingState({ streamingState }: { streamingState: StreamingAn
 
         {/* Show completed sections */}
         {completedSections.length > 0 && (
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Analysis Results</h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="mb-6 sm:mb-8">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">
+              Analysis Results
+            </h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {/* Key Strengths */}
               {streamingState.strengths.length > 0 && (
-                <div className="bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-xl p-6 shadow-sm">
-                  <div className="flex items-center gap-3 mb-5">
-                    <div className="p-2.5 bg-emerald-100 rounded-lg">
-                      <Shield className="h-7 w-7 text-emerald-600" />
+                <div className="bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-xl p-4 sm:p-6 shadow-sm">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-5">
+                    <div className="p-2 sm:p-2.5 bg-emerald-100 rounded-lg">
+                      <Shield className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7 text-emerald-600" />
                     </div>
-                    <h3 className="font-bold text-emerald-800 text-2xl">Key Strengths</h3>
+                    <h3 className="font-bold text-emerald-800 text-lg sm:text-xl lg:text-2xl">
+                      Key Strengths
+                    </h3>
                   </div>
-                  <ul className="space-y-4">
+                  <ul className="space-y-3 sm:space-y-4">
                     {streamingState.strengths.map((strength, i) => (
                       <li
                         key={i}
-                        className="text-base text-emerald-700 flex items-start gap-3 leading-relaxed"
+                        className="text-sm sm:text-base text-emerald-700 flex items-start gap-2 sm:gap-3 leading-relaxed"
                       >
-                        <span className="text-emerald-500 mt-0.5 text-xl font-bold flex-shrink-0">
+                        <span className="text-emerald-500 mt-0.5 text-lg sm:text-xl font-bold flex-shrink-0">
                           ✓
                         </span>
                         <span className="font-medium">{strength}</span>
@@ -490,49 +498,51 @@ export default function ListingPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
       <Navigation />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Back */}
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <Link href="/">
-            <Button variant="outline">
-              <ArrowLeft className="h-4 w-4 mr-2" />
+            <Button variant="outline" className="text-xs sm:text-sm">
+              <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
               Back to Search
             </Button>
           </Link>
         </div>
 
         {/* Title */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Property Analysis</h1>
-          <p className="text-base text-gray-700 leading-relaxed font-medium">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+            Property Analysis
+          </h1>
+          <p className="text-sm sm:text-base text-gray-700 leading-relaxed font-medium">
             Expert analysis based on the information you provided. Educational/informational only —
             not real estate, investment, or financial advice.
           </p>
         </div>
 
         {/* Property Summary Bar */}
-        <div className="mb-8 p-4 bg-white border border-gray-200 rounded-lg shadow-sm sticky top-4 z-10">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="mb-6 sm:mb-8 p-3 sm:p-4 bg-white border border-gray-200 rounded-lg shadow-sm sticky top-4 z-10">
+          <div className="flex flex-col gap-3 sm:gap-4">
             <div className="flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-blue-600" />
-              <span className="font-semibold text-gray-900 text-lg">
+              <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 flex-shrink-0" />
+              <span className="font-semibold text-gray-900 text-sm sm:text-base lg:text-lg break-words">
                 {listingData.manualData?.property_type
                   ? `${listingData.manualData.property_type} - `
                   : ''}
                 {listingData.propertyTitle}
               </span>
             </div>
-            <div className="flex flex-wrap gap-3">
-              <span className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white shadow-sm">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
+              <span className="inline-flex items-center px-2 sm:px-4 py-1 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold bg-blue-600 text-white shadow-sm">
                 Analysis Score: {Math.round((listingData.score?.composite ?? 0) / 20)}/5
               </span>
               {listingData.manualData?.price && (
-                <span className="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
+                <span className="inline-flex items-center px-2 sm:px-3 py-1 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
                   {listingData.manualData.price}
                 </span>
               )}
               {listingData.manualData?.bedrooms && listingData.manualData?.bathrooms && (
-                <span className="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium bg-purple-100 text-purple-800 border border-purple-200">
+                <span className="inline-flex items-center px-2 sm:px-3 py-1 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-purple-100 text-purple-800 border border-purple-200">
                   {listingData.manualData.bedrooms} bed, {listingData.manualData.bathrooms} bath
                 </span>
               )}
@@ -609,32 +619,36 @@ export default function ListingPage() {
         )}
 
         {/* Analysis Grid - 2x2 Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {/* Key Strengths */}
           {listingData.strengths?.length > 0 && (
-            <div className="bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-xl p-6 shadow-sm">
-              <div className="flex items-center gap-3 mb-5">
-                <div className="p-2.5 bg-emerald-100 rounded-lg">
-                  <Shield className="h-7 w-7 text-emerald-600" />
+            <div className="bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-xl p-4 sm:p-6 shadow-sm">
+              <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-5">
+                <div className="p-2 sm:p-2.5 bg-emerald-100 rounded-lg">
+                  <Shield className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7 text-emerald-600" />
                 </div>
-                <h3 className="font-bold text-emerald-800 text-2xl">Key Strengths</h3>
+                <h3 className="font-bold text-emerald-800 text-lg sm:text-xl lg:text-2xl">
+                  Key Strengths
+                </h3>
               </div>
-              <ul className="space-y-4 mb-5">
+              <ul className="space-y-3 sm:space-y-4 mb-4 sm:mb-5">
                 {listingData.strengths.map((strength, i) => (
                   <li
                     key={i}
-                    className="text-base text-emerald-700 flex items-start gap-3 leading-relaxed"
+                    className="text-sm sm:text-base text-emerald-700 flex items-start gap-2 sm:gap-3 leading-relaxed"
                   >
-                    <span className="text-emerald-500 mt-0.5 text-xl font-bold flex-shrink-0">
+                    <span className="text-emerald-500 mt-0.5 text-lg sm:text-xl font-bold flex-shrink-0">
                       ✓
                     </span>
                     <span className="font-medium">{strength}</span>
                   </li>
                 ))}
               </ul>
-              <div className="bg-emerald-100 rounded-lg p-4 border border-emerald-200">
-                <p className="text-base font-semibold text-emerald-800 mb-2">💡 Take Action:</p>
-                <p className="text-base text-emerald-700 leading-relaxed font-medium">
+              <div className="bg-emerald-100 rounded-lg p-3 sm:p-4 border border-emerald-200">
+                <p className="text-sm sm:text-base font-semibold text-emerald-800 mb-2">
+                  💡 Take Action:
+                </p>
+                <p className="text-sm sm:text-base text-emerald-700 leading-relaxed font-medium">
                   Consider how these strengths align with your investment goals and lifestyle
                   preferences.
                 </p>

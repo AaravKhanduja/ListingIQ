@@ -52,7 +52,6 @@ export function ListingInputForm({
     setValidationError(null);
 
     if (propertyInput.trim() && (manualData.listing_description || '').trim()) {
-
       // Store both the address and manual data
       const analysisData = {
         address: propertyInput,
@@ -90,28 +89,31 @@ export function ListingInputForm({
   };
 
   return (
-    <Card className="shadow-2xl border-0 bg-white mb-8">
-      <CardHeader className="pb-6">
-        <CardTitle className="text-2xl text-black flex items-center">
-          <Home className="h-6 w-6 mr-3 text-blue-600" />
+    <Card className="shadow-2xl border-0 bg-white mb-6 sm:mb-8 mx-2 sm:mx-0">
+      <CardHeader className="pb-4 sm:pb-6 px-4 sm:px-6">
+        <CardTitle className="text-xl sm:text-2xl text-black flex items-center">
+          <Home className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-blue-600" />
           Property Analysis
         </CardTitle>
-        <CardDescription className="text-slate-600 text-base">
+        <CardDescription className="text-slate-600 text-sm sm:text-base">
           Paste a listing description and add property details for expert analysis
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">
         {/* Validation Error */}
         {validationError && (
           <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
-            <p className="text-sm text-red-700">{validationError}</p>
+            <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-500 flex-shrink-0" />
+            <p className="text-xs sm:text-sm text-red-700">{validationError}</p>
           </div>
         )}
 
         {/* Property Address */}
-        <div className="space-y-3">
-          <Label htmlFor="property-input" className="text-base font-semibold text-slate-800">
+        <div className="space-y-2 sm:space-y-3">
+          <Label
+            htmlFor="property-input"
+            className="text-sm sm:text-base font-semibold text-slate-800"
+          >
             Property Address
           </Label>
           <div className="relative">
@@ -121,16 +123,19 @@ export function ListingInputForm({
               placeholder="e.g., 123 Oak Street, San Francisco, CA"
               value={propertyInput}
               onChange={(e) => setPropertyInput(e.target.value)}
-              className="h-14 text-base pl-12 pr-4 border-2 border-blue-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl transition-colors"
+              className="h-12 sm:h-14 text-sm sm:text-base pl-10 sm:pl-12 pr-4 border-2 border-blue-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl transition-colors"
               disabled={isAnalyzing}
             />
-            <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+            <MapPin className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-slate-400" />
           </div>
         </div>
 
         {/* Listing Description */}
-        <div className="space-y-3">
-          <Label htmlFor="listing-description" className="text-base font-semibold text-slate-800">
+        <div className="space-y-2 sm:space-y-3">
+          <Label
+            htmlFor="listing-description"
+            className="text-sm sm:text-base font-semibold text-slate-800"
+          >
             Listing Description <span className="text-red-500">*</span>
           </Label>
           <div className="relative">
@@ -139,12 +144,12 @@ export function ListingInputForm({
               placeholder="Paste the full listing description here. Include details about features, condition, neighborhood, etc."
               value={manualData.listing_description || ''}
               onChange={(e) => updateManualData('listing_description', e.target.value)}
-              className="min-h-32 text-base pl-12 pr-4 border-2 border-blue-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl transition-colors resize-none"
+              className="min-h-28 sm:min-h-32 text-sm sm:text-base pl-10 sm:pl-12 pr-4 border-2 border-blue-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl transition-colors resize-none"
               disabled={isAnalyzing}
             />
-            <FileText className="absolute left-4 top-3 h-5 w-5 text-slate-400" />
+            <FileText className="absolute left-3 sm:left-4 top-3 h-4 w-4 sm:h-5 sm:w-5 text-slate-400" />
           </div>
-          <p className="text-sm text-slate-500">
+          <p className="text-xs sm:text-sm text-slate-500">
             The more detailed the description, the better the analysis will be.
           </p>
         </div>
@@ -155,7 +160,7 @@ export function ListingInputForm({
             type="button"
             variant="outline"
             onClick={() => setShowAdvancedFields(!showAdvancedFields)}
-            className="text-blue-600 border-blue-200 hover:bg-blue-50"
+            className="text-blue-600 border-blue-200 hover:bg-blue-50 text-xs sm:text-sm px-3 sm:px-4"
           >
             {showAdvancedFields ? 'Hide' : 'Show'} Additional Property Details
           </Button>
@@ -163,7 +168,7 @@ export function ListingInputForm({
 
         {/* Advanced Fields */}
         {showAdvancedFields && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 p-3 sm:p-4 bg-slate-50 rounded-lg">
             {/* Property Type */}
             <div className="space-y-2">
               <Label htmlFor="property-type" className="text-sm font-medium text-slate-700">
@@ -343,14 +348,14 @@ export function ListingInputForm({
         <Button
           onClick={handleAnalyze}
           disabled={!isInputValid() || isAnalyzing}
-          className="w-full h-14 text-lg font-semibold bg-blue-600 hover:bg-blue-700 transition-all duration-200 rounded-xl shadow-lg hover:shadow-xl"
+          className="w-full h-12 sm:h-14 text-sm sm:text-lg font-semibold bg-blue-600 hover:bg-blue-700 transition-all duration-200 rounded-xl shadow-lg hover:shadow-xl"
         >
           {isAnalyzing ? (
             <>Analyzing Property...</>
           ) : (
             <>
               Get Expert Analysis
-              <ArrowRight className="h-5 w-5 ml-3" />
+              <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 ml-2 sm:ml-3" />
             </>
           )}
         </Button>
