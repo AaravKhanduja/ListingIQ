@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from app.routers import analyze, user, analyze_streaming, websocket
+from app.routers import analyze, user, analyze_streaming, websocket, model_info
 from app.middleware.rate_limit import rate_limit_middleware
 from app.middleware.validation import validate_request_middleware
 from app.services.logger import logger
@@ -93,6 +93,7 @@ app.include_router(analyze.router, prefix="/api")
 app.include_router(analyze_streaming.router, prefix="/api")
 app.include_router(websocket.router, prefix="/api")
 app.include_router(user.router, prefix="/api")
+app.include_router(model_info.router, prefix="/api")
 
 
 @app.on_event("startup")

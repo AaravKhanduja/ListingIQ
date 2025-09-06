@@ -67,7 +67,7 @@ export function ProfileOverlay({ isOpen, onClose }: ProfileOverlayProps) {
         alert(`Failed to delete account: ${result.error}`);
       }
       // If successful, the user will be redirected automatically
-    } catch (error) {
+    } catch {
       alert('An unexpected error occurred while deleting your account');
     } finally {
       setIsDeletingAccount(false);
