@@ -8,6 +8,7 @@ import { Navigation } from '@/components/layout/Navigation';
 import { ActionButtons } from '@/components/listing/ActionButtons';
 import { LoadingState } from '@/components/listing/LoadingState';
 import { SaveButton } from '@/components/listing/SaveButton';
+import { AnalysisSkeletonLoader } from '@/components/listing/SkeletonLoader';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,6 +31,7 @@ import {
 } from 'lucide-react';
 
 import { analyzeListing, AnalyzeRequest, ManualPropertyData } from '@/lib/analyze';
+import { useStreamingAnalysis, StreamingAnalysisState } from '@/lib/analyze-streaming';
 import { saveAnalysis } from '@/lib/save-analysis-hybrid';
 import { useAuth } from '@/lib/auth';
 
@@ -73,15 +75,191 @@ interface ListingData {
   generatedAt?: string;
 }
 
+// Streaming loading component that shows progress as sections complete
+function StreamingLoadingState({ streamingState }: { streamingState: StreamingAnalysisState }) {
+  const completedSections = [];
+  if (streamingState.summary) completedSections.push('Summary');
+  if (streamingState.strengths.length > 0) completedSections.push('Strengths');
+  if (streamingState.weaknesses.length > 0) completedSections.push('Research Areas');
+  if (streamingState.hiddenRisks.length > 0) completedSections.push('Hidden Risks');
+  if (streamingState.questions.length > 0) completedSections.push('Questions');
+
+  const progress = (completedSections.length / 5) * 100;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+      <Navigation />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Back */}
+        <div className="mb-6">
+          <Link href="/">
+            <Button variant="outline">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Search
+            </Button>
+          </Link>
+        </div>
+
+        {/* Title */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Property Analysis</h1>
+          <p className="text-base text-gray-700 leading-relaxed font-medium">
+            Generating expert analysis based on the information you provided...
+          </p>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mb-8 p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Analysis Progress</h3>
+            <span className="text-sm text-gray-600">{Math.round(progress)}% complete</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+            <div
+              className="bg-blue-600 h-2 rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          {completedSections.length > 0 && (
+            <div className="text-sm text-gray-600">
+              <span className="font-medium">Completed:</span> {completedSections.join(', ')}
+            </div>
+          )}
+        </div>
+
+        {/* Show completed sections */}
+        {completedSections.length > 0 && (
+          <div className="mb-8">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Analysis Results</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Key Strengths */}
+              {streamingState.strengths.length > 0 && (
+                <div className="bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-xl p-6 shadow-sm">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="p-2.5 bg-emerald-100 rounded-lg">
+                      <Shield className="h-7 w-7 text-emerald-600" />
+                    </div>
+                    <h3 className="font-bold text-emerald-800 text-2xl">Key Strengths</h3>
+                  </div>
+                  <ul className="space-y-4">
+                    {streamingState.strengths.map((strength, i) => (
+                      <li
+                        key={i}
+                        className="text-base text-emerald-700 flex items-start gap-3 leading-relaxed"
+                      >
+                        <span className="text-emerald-500 mt-0.5 text-xl font-bold flex-shrink-0">
+                          ✓
+                        </span>
+                        <span className="font-medium">{strength}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Areas to Research */}
+              {streamingState.weaknesses.length > 0 && (
+                <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl p-6 shadow-sm">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="p-2.5 bg-amber-100 rounded-lg">
+                      <AlertTriangle className="h-7 w-7 text-amber-600" />
+                    </div>
+                    <h3 className="font-bold text-amber-800 text-2xl">Areas to Research</h3>
+                  </div>
+                  <ul className="space-y-4">
+                    {streamingState.weaknesses.map((weakness, i) => (
+                      <li
+                        key={i}
+                        className="text-base text-amber-700 flex items-start gap-3 leading-relaxed"
+                      >
+                        <span className="text-amber-500 mt-0.5 text-xl font-bold flex-shrink-0">
+                          ⚠
+                        </span>
+                        <span className="font-medium">{weakness}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Hidden Risks */}
+              {streamingState.hiddenRisks.length > 0 && (
+                <div className="bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-200 rounded-xl p-6 shadow-sm">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="p-2.5 bg-red-100 rounded-lg">
+                      <AlertTriangle className="h-7 w-7 text-red-600" />
+                    </div>
+                    <h3 className="font-bold text-red-800 text-2xl">Hidden Risks & Issues</h3>
+                  </div>
+                  <ul className="space-y-4">
+                    {streamingState.hiddenRisks.map((risk, i) => (
+                      <li
+                        key={i}
+                        className="text-base text-red-700 flex items-start gap-3 leading-relaxed"
+                      >
+                        <span className="text-red-500 mt-0.5 text-xl font-bold flex-shrink-0">
+                          🚨
+                        </span>
+                        <span className="font-medium">{risk}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Questions for Realtor */}
+              {streamingState.questions.length > 0 && (
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 shadow-sm">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="p-2.5 bg-blue-100 rounded-lg">
+                      <Target className="h-7 w-7 text-blue-600" />
+                    </div>
+                    <h3 className="font-bold text-blue-800 text-2xl">
+                      Questions to Ask Your Realtor
+                    </h3>
+                  </div>
+                  <ul className="space-y-4">
+                    {streamingState.questions.map((question, i) => (
+                      <li
+                        key={i}
+                        className="text-base text-blue-700 flex items-start gap-3 leading-relaxed"
+                      >
+                        <span className="text-blue-500 mt-0.5 text-xl font-bold flex-shrink-0">
+                          ❓
+                        </span>
+                        <span className="font-medium">{question}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Show skeleton for remaining sections */}
+        {completedSections.length < 5 && (
+          <div className="mb-8">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Generating Analysis...</h3>
+            <AnalysisSkeletonLoader />
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
 export default function ListingPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
 
   const [listingData, setListingData] = useState<ListingData | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [analysisProgress, setAnalysisProgress] = useState(0);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['methodology']));
+  const [hasStartedAnalysis, setHasStartedAnalysis] = useState(false);
+
+  // Use streaming analysis
+  const { state: streamingState, startAnalysis, isAnalyzing } = useStreamingAnalysis();
 
   const toggleSection = (key: string) => {
     setExpandedSections((prev) => {
@@ -93,17 +271,29 @@ export default function ListingPage() {
   };
 
   useEffect(() => {
-    const fetchAnalysis = async () => {
-      if (!id) return;
-      try {
-        setLoading(true);
-        setError(null);
-        setAnalysisProgress(10);
+    const startStreamingAnalysis = async () => {
+      if (!id || hasStartedAnalysis || listingData) return;
 
+      try {
+        setError(null);
         const propertyAddress = decodeURIComponent(String(id));
 
+        // Check if we already have analysis data for this property
+        const analysisKey = `analysis_${propertyAddress}`;
+        const existingAnalysis = localStorage.getItem(analysisKey);
+
+        if (existingAnalysis) {
+          try {
+            const parsedAnalysis = JSON.parse(existingAnalysis);
+            setListingData(parsedAnalysis);
+            setHasStartedAnalysis(true);
+            return; // Don't restart analysis if we already have results
+          } catch {
+            // If parsing fails, continue with new analysis
+          }
+        }
+
         // Get the manual data from localStorage
-        setAnalysisProgress(20);
         const currentPropertyData = localStorage.getItem('currentProperty');
         let manualData: ManualPropertyData | undefined;
 
@@ -118,65 +308,21 @@ export default function ListingPage() {
           }
         }
 
-        setAnalysisProgress(30);
-        const request: AnalyzeRequest = {
-          property_address: propertyAddress,
-          property_title: propertyAddress,
-          manual_data: manualData,
-        };
+        // Get user token for authentication
+        const { getSession } = await import('@/lib/supabase/auth');
+        const session = await getSession();
+        const userToken = session?.access_token;
 
-        setAnalysisProgress(40);
-
-        // Simulate progress during LLM processing
-        const progressInterval = setInterval(() => {
-          setAnalysisProgress((prev) => {
-            if (prev < 65) return prev + 2;
-            return prev;
-          });
-        }, 200);
-
-        const response = await analyzeListing(request);
-        clearInterval(progressInterval);
-
-        setAnalysisProgress(70);
-
-        if (response.success && response.analysis) {
-          const a = response.analysis;
-
-          setAnalysisProgress(85);
-          const newAnalysis: ListingData = {
-            propertyTitle: a.property_title || propertyAddress,
-            summary: a.summary || '',
-            executiveSummary: a.executive_summary,
-            disclaimer: a.disclaimer,
-            manualData: a.manual_data,
-            score: {
-              composite: a.overall_score ?? 0,
-            },
-            marketAnalysis: a.market_analysis || undefined,
-            investmentPotential: a.investment_potential || undefined,
-            riskAssessment: a.risk_assessment || undefined,
-            renovationAnalysis: a.renovation_analysis || undefined,
-            strengths: a.strengths || [],
-            weaknesses: a.weaknesses || [],
-            hiddenIssues: a.hidden_issues || [],
-            questions: a.questions || [],
-            generatedAt: a.generated_at || undefined,
-          };
-
-          setAnalysisProgress(95);
-          setListingData(newAnalysis);
-
-          // Auto-save the analysis
-          if (user) {
-            const propertyInput = decodeURIComponent(String(id));
-            saveAnalysis(newAnalysis, propertyInput, user.id);
-          }
-
-          setAnalysisProgress(100);
-        } else {
-          setError(response.error || 'Failed to load analysis');
+        if (!userToken) {
+          setError('Authentication required');
+          return;
         }
+
+        // Mark that we've started analysis to prevent restarts
+        setHasStartedAnalysis(true);
+
+        // Start streaming analysis
+        await startAnalysis(propertyAddress, propertyAddress, manualData, userToken);
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : 'An error occurred';
 
@@ -187,18 +333,59 @@ export default function ListingPage() {
           errorMessage.includes('please sign in again')
         ) {
           window.location.href = '/auth/signin';
-          return; // Don't set error state since we're redirecting
+          return;
         }
 
         setError(errorMessage);
-      } finally {
-        setLoading(false);
+        setHasStartedAnalysis(false); // Allow retry on error
       }
     };
-    fetchAnalysis();
-  }, [id, user]);
 
-  if (loading) return <LoadingState analysisProgress={analysisProgress} />;
+    startStreamingAnalysis();
+  }, [id, startAnalysis, hasStartedAnalysis, listingData]);
+
+  // Update listing data as streaming results come in
+  useEffect(() => {
+    if (streamingState.isComplete && streamingState.summary) {
+      const newAnalysis: ListingData = {
+        propertyTitle: decodeURIComponent(String(id)),
+        summary: streamingState.summary.summary || '',
+        executiveSummary: undefined,
+        disclaimer:
+          'This report is generated from the information you provided and is for educational/informational purposes only. It is not real estate, investment, or financial advice. Please consult licensed professionals before making decisions.',
+        manualData: undefined, // Will be populated from localStorage
+        score: {
+          composite: streamingState.summary.overall_score ?? 75,
+        },
+        marketAnalysis: undefined,
+        investmentPotential: undefined,
+        riskAssessment: undefined,
+        renovationAnalysis: undefined,
+        strengths: streamingState.strengths || [],
+        weaknesses: streamingState.weaknesses || [],
+        hiddenIssues: streamingState.hiddenRisks || [],
+        questions: streamingState.questions || [],
+        generatedAt: new Date().toISOString(),
+      };
+
+      setListingData(newAnalysis);
+
+      // Save to localStorage to prevent restarts
+      const propertyAddress = decodeURIComponent(String(id));
+      const analysisKey = `analysis_${propertyAddress}`;
+      localStorage.setItem(analysisKey, JSON.stringify(newAnalysis));
+
+      // Auto-save the analysis
+      if (user) {
+        const propertyInput = decodeURIComponent(String(id));
+        saveAnalysis(newAnalysis, propertyInput, user.id);
+      }
+    }
+
+    if (streamingState.error) {
+      setError(streamingState.error);
+    }
+  }, [streamingState, id, user]);
 
   if (error) {
     return (
@@ -215,6 +402,9 @@ export default function ListingPage() {
       </div>
     );
   }
+
+  // Show loading only if we're analyzing AND don't have listing data yet
+  if (isAnalyzing && !listingData) return <StreamingLoadingState streamingState={streamingState} />;
 
   if (!listingData) return null;
 
