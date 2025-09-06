@@ -14,15 +14,13 @@ class OptimizedPrompts:
     def property_summary_prompt(
         address: str, manual_data: Optional[ManualPropertyData]
     ) -> str:
-        """Generate concise property summary - ~150 tokens"""
-        return f"""Analyze this property and return JSON only:
-
-Property: {address}
+        """Generate concise property summary - ~100 tokens"""
+        return f"""Property: {address}
 Type: {manual_data.property_type if manual_data and manual_data.property_type else "Unknown"}
 Price: {manual_data.price if manual_data and manual_data.price else "Not provided"}
 Size: {manual_data.square_feet if manual_data and manual_data.square_feet else "Unknown"} sq ft
 Beds/Baths: {manual_data.bedrooms if manual_data and manual_data.bedrooms else "?"}/{manual_data.bathrooms if manual_data and manual_data.bathrooms else "?"}
-Description: {manual_data.listing_description[:200] if manual_data and manual_data.listing_description else "None"}
+Description: {manual_data.listing_description[:150] if manual_data and manual_data.listing_description else "None"}
 
 Return JSON: {{"summary": "2-3 sentence summary", "overall_score": 75}}"""
 
@@ -30,13 +28,11 @@ Return JSON: {{"summary": "2-3 sentence summary", "overall_score": 75}}"""
     def strengths_prompt(
         address: str, manual_data: Optional[ManualPropertyData]
     ) -> str:
-        """Generate key strengths - ~120 tokens"""
-        return f"""Identify 3-4 key strengths for this property:
-
-{address}
+        """Generate key strengths - ~80 tokens"""
+        return f"""Identify 3-4 key strengths for {address}:
 Type: {manual_data.property_type if manual_data and manual_data.property_type else "Unknown"}
 Price: {manual_data.price if manual_data and manual_data.price else "Not provided"}
-Description: {manual_data.listing_description[:150] if manual_data and manual_data.listing_description else "None"}
+Description: {manual_data.listing_description[:100] if manual_data and manual_data.listing_description else "None"}
 
 Return JSON: {{"strengths": ["strength1", "strength2", "strength3", "strength4"]}}"""
 
@@ -44,25 +40,21 @@ Return JSON: {{"strengths": ["strength1", "strength2", "strength3", "strength4"]
     def research_areas_prompt(
         address: str, manual_data: Optional[ManualPropertyData]
     ) -> str:
-        """Generate research areas - ~120 tokens"""
-        return f"""What areas need research for this property?
-
-{address}
+        """Generate research areas - ~80 tokens"""
+        return f"""What areas need research for {address}?
 Type: {manual_data.property_type if manual_data and manual_data.property_type else "Unknown"}
 Price: {manual_data.price if manual_data and manual_data.price else "Not provided"}
-Description: {manual_data.listing_description[:150] if manual_data and manual_data.listing_description else "None"}
+Description: {manual_data.listing_description[:100] if manual_data and manual_data.listing_description else "None"}
 
 Return JSON: {{"weaknesses": ["area1", "area2", "area3", "area4"]}}"""
 
     @staticmethod
     def risks_prompt(address: str, manual_data: Optional[ManualPropertyData]) -> str:
-        """Generate hidden risks - ~120 tokens"""
-        return f"""Identify potential risks for this property:
-
-{address}
+        """Generate hidden risks - ~80 tokens"""
+        return f"""Identify potential risks for {address}:
 Type: {manual_data.property_type if manual_data and manual_data.property_type else "Unknown"}
 Price: {manual_data.price if manual_data and manual_data.price else "Not provided"}
-Description: {manual_data.listing_description[:150] if manual_data and manual_data.listing_description else "None"}
+Description: {manual_data.listing_description[:100] if manual_data and manual_data.listing_description else "None"}
 
 Return JSON: {{"hidden_risks": ["risk1", "risk2", "risk3", "risk4"]}}"""
 
@@ -70,13 +62,11 @@ Return JSON: {{"hidden_risks": ["risk1", "risk2", "risk3", "risk4"]}}"""
     def questions_prompt(
         address: str, manual_data: Optional[ManualPropertyData]
     ) -> str:
-        """Generate realtor questions - ~130 tokens"""
-        return f"""Generate 5-6 critical questions for the realtor:
-
-{address}
+        """Generate realtor questions - ~80 tokens"""
+        return f"""Generate 5-6 critical questions for the realtor about {address}:
 Type: {manual_data.property_type if manual_data and manual_data.property_type else "Unknown"}
 Price: {manual_data.price if manual_data and manual_data.price else "Not provided"}
-Description: {manual_data.listing_description[:150] if manual_data and manual_data.listing_description else "None"}
+Description: {manual_data.listing_description[:100] if manual_data and manual_data.listing_description else "None"}
 
 Return JSON: {{"questions": ["question1", "question2", "question3", "question4", "question5", "question6"]}}"""
 

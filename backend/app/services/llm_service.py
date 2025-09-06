@@ -62,9 +62,17 @@ class LLMService:
     def _get_model(self) -> str:
         """Get the model name based on provider"""
         if self.provider == LLMProvider.OPENAI:
-            return os.getenv("OPENAI_MODEL", "gpt-4")
+            # Use faster model for development, GPT-4 for production
+            if os.getenv("ENVIRONMENT", "").lower() == "production":
+                return os.getenv("OPENAI_MODEL", "gpt-4")
+            else:
+                return os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")  # Faster for dev
         elif self.provider == LLMProvider.OLLAMA:
-            return os.getenv("OLLAMA_MODEL", "llama3.2:3b")
+            # Use smaller, faster model for development
+            if os.getenv("ENVIRONMENT", "").lower() == "production":
+                return os.getenv("OLLAMA_MODEL", "llama3.2:3b")
+            else:
+                return os.getenv("OLLAMA_MODEL", "llama3.2:1b")  # Faster for dev
 
     def _get_environment_info(self) -> str:
         """Get environment information for logging"""
@@ -93,13 +101,13 @@ class LLMService:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are an expert real estate investment analyst with decades of experience evaluating properties across all markets. You excel at identifying key strengths, potential weaknesses, hidden risks, and critical questions that buyers should ask. Your analysis is always data-driven, practical, and actionable. You focus on providing insights that help investors make informed decisions.",
+                        "content": "You are an expert real estate analyst. Provide concise, actionable insights. Focus on key points only.",
                     },
                     {"role": "user", "content": prompt},
                 ],
-                temperature=0.3,
-                max_tokens=1500,  # Reduced for faster response
-                timeout=30,  # Add timeout for faster failure
+                temperature=0.2,  # Lower temperature for faster, more consistent responses
+                max_tokens=800,  # Further reduced for faster response
+                timeout=15,  # Reduced timeout for faster failure
             )
 
             analysis_text = response.choices[0].message.content.strip()
@@ -121,14 +129,15 @@ class LLMService:
                     messages=[
                         {
                             "role": "system",
-                            "content": "You are an expert real estate investment analyst with decades of experience evaluating properties across all markets. You excel at identifying key strengths, potential weaknesses, hidden risks, and critical questions that buyers should ask. Your analysis is always data-driven, practical, and actionable. You focus on providing insights that help investors make informed decisions.",
+                            "content": "You are an expert real estate analyst. Provide concise, actionable insights. Focus on key points only.",
                         },
                         {"role": "user", "content": prompt},
                     ],
                     options={
-                        "temperature": 0.3,
-                        "num_predict": 1500,
-                    },  # Reduced for faster response
+                        "temperature": 0.2,  # Lower temperature for faster responses
+                        "num_predict": 800,  # Further reduced for faster response
+                        "num_ctx": 2048,  # Reduced context window for speed
+                    },
                 )
                 return response["message"]["content"]
 

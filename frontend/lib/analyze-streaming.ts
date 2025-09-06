@@ -135,6 +135,7 @@ export class StreamingAnalysisClient {
 
       case 'section_complete':
         if (data.section && data.data) {
+          // Batch updates to reduce re-renders
           this.onUpdate(prev => {
             const newState = { ...prev };
             

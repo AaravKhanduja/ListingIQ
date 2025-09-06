@@ -40,20 +40,19 @@ async def analyze_property_streaming(
 
             llm_service = LLMService()
 
-            # Generate analysis sections progressively
-            analysis_sections = await generate_progressive_analysis(
+            # Generate analysis sections with real-time streaming
+            async for (
+                section_name,
+                section_data,
+            ) in generate_progressive_analysis_stream(
                 address=request.property_address,
                 title=request.property_title or request.property_address,
                 manual_data=request.manual_data,
                 user_id=request.user_id,
                 llm_service=llm_service,
                 analysis_id=analysis_id,
-            )
-
-            # Stream each section as it becomes available
-            for section_name, section_data in analysis_sections.items():
+            ):
                 yield f"data: {json.dumps({'type': 'section_complete', 'section': section_name, 'data': section_data})}\n\n"
-                await asyncio.sleep(0.1)  # Small delay for smooth streaming
 
             # Send completion signal
             yield f"data: {json.dumps({'type': 'analysis_complete', 'analysis_id': analysis_id})}\n\n"
@@ -68,11 +67,12 @@ async def analyze_property_streaming(
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
             "Content-Type": "text/event-stream",
+            "Content-Encoding": "gzip",  # Enable compression
         },
     )
 
 
-async def generate_progressive_analysis(
+async def generate_progressive_analysis_stream(
     *,
     address: str,
     title: str,
@@ -80,103 +80,93 @@ async def generate_progressive_analysis(
     user_id: str,
     llm_service: LLMService,
     analysis_id: str,
+) -> AsyncGenerator[tuple[str, Dict[str, Any]], None]:
+    """Generate analysis sections with real-time streaming as each section completes"""
+
+    from ..services.optimized_prompts import OptimizedPrompts
+
+    # Get optimized prompts
+    prompts = OptimizedPrompts.get_all_prompts(address, manual_data)
+
+    # Create tasks for parallel execution
+    tasks = {
+        "summary": llm_service.generate_analysis(prompts["summary"]),
+        "strengths": llm_service.generate_analysis(prompts["strengths"]),
+        "research_areas": llm_service.generate_analysis(prompts["research_areas"]),
+        "risks": llm_service.generate_analysis(prompts["risks"]),
+        "questions": llm_service.generate_analysis(prompts["questions"]),
+    }
+
+    # Track which sections have been yielded
+    yielded_sections = set()
+
+    # Use asyncio.as_completed to get results as they finish
+    for coro in asyncio.as_completed(tasks.values()):
+        try:
+            result = await coro
+
+            # Find which section this result belongs to
+            for section_name, task_coro in tasks.items():
+                if task_coro.done() and section_name not in yielded_sections:
+                    yielded_sections.add(section_name)
+
+                    # Format the section data
+                    section_data = format_section_data(section_name, result)
+                    yield section_name, section_data
+
+                    # Add a small delay to create gradual progress effect
+                    if len(yielded_sections) < len(tasks):
+                        await asyncio.sleep(0.4)  # 400ms delay between completions
+                    break
+
+        except Exception as e:
+            print(f"❌ Error in analysis section: {e}")
+            # Find which section failed and yield error
+            for section_name, task_coro in tasks.items():
+                if task_coro.done() and section_name not in yielded_sections:
+                    yielded_sections.add(section_name)
+                    section_data = format_section_data(section_name, None)
+                    yield section_name, section_data
+                    break
+
+
+def format_section_data(
+    section_name: str, result: Optional[Dict[str, Any]]
 ) -> Dict[str, Any]:
-    """Generate analysis sections progressively"""
+    """Format section data for streaming response"""
 
-    # Section 1: Property Summary (Fastest - 2-3 seconds)
-    summary_prompt = f"""
-    Analyze this property and provide a concise summary in JSON format:
-    
-    Property: {address}
-    Type: {manual_data.property_type if manual_data and manual_data.property_type else "Unknown"}
-    Price: {manual_data.price if manual_data and manual_data.price else "Not provided"}
-    Description: {manual_data.listing_description if manual_data and manual_data.listing_description else "None"}
-    
-    Return JSON: {{"summary": "2-3 sentence summary", "overall_score": 75}}
-    """
-
-    summary_result = await llm_service.generate_analysis(summary_prompt)
-
-    # Section 2: Key Strengths (3-4 seconds)
-    strengths_prompt = f"""
-    Based on this property information, identify 3-4 key strengths:
-    
-    {address}
-    {manual_data.listing_description if manual_data and manual_data.listing_description else "No description"}
-    
-    Return JSON: {{"strengths": ["strength1", "strength2", "strength3", "strength4"]}}
-    """
-
-    strengths_result = await llm_service.generate_analysis(strengths_prompt)
-
-    # Section 3: Areas to Research (3-4 seconds)
-    research_prompt = f"""
-    What areas need additional research for this property?
-    
-    {address}
-    {manual_data.listing_description if manual_data and manual_data.listing_description else "No description"}
-    
-    Return JSON: {{"weaknesses": ["area1", "area2", "area3", "area4"]}}
-    """
-
-    research_result = await llm_service.generate_analysis(research_prompt)
-
-    # Section 4: Hidden Risks (3-4 seconds)
-    risks_prompt = f"""
-    Identify potential hidden risks or issues:
-    
-    {address}
-    {manual_data.listing_description if manual_data and manual_data.listing_description else "No description"}
-    
-    Return JSON: {{"hidden_risks": ["risk1", "risk2", "risk3", "risk4"]}}
-    """
-
-    risks_result = await llm_service.generate_analysis(risks_prompt)
-
-    # Section 5: Questions for Realtor (3-4 seconds)
-    questions_prompt = f"""
-    Generate 5-6 critical questions to ask the realtor:
-    
-    {address}
-    {manual_data.listing_description if manual_data and manual_data.listing_description else "No description"}
-    
-    Return JSON: {{"questions": ["question1", "question2", "question3", "question4", "question5", "question6"]}}
-    """
-
-    questions_result = await llm_service.generate_analysis(questions_prompt)
-
-    # Return sections in order
-    return {
-        "summary": {
-            "summary": summary_result.get(
+    if section_name == "summary":
+        return {
+            "summary": result.get(
                 "summary", "Property analysis based on provided information"
             )
-            if summary_result
+            if result
             else "Analysis in progress...",
-            "overall_score": summary_result.get("overall_score", 75)
-            if summary_result
-            else 75,
-        },
-        "strengths": {
-            "strengths": strengths_result.get("strengths", ["Analysis in progress..."])
-            if strengths_result
+            "overall_score": result.get("overall_score", 75) if result else 75,
+        }
+    elif section_name == "strengths":
+        return {
+            "strengths": result.get("strengths", ["Analysis in progress..."])
+            if result
             else ["Analysis in progress..."],
-        },
-        "research_areas": {
-            "weaknesses": research_result.get("weaknesses", ["Analysis in progress..."])
-            if research_result
+        }
+    elif section_name == "research_areas":
+        return {
+            "weaknesses": result.get("weaknesses", ["Analysis in progress..."])
+            if result
             else ["Analysis in progress..."],
-        },
-        "hidden_risks": {
-            "hidden_risks": risks_result.get(
-                "hidden_risks", ["Analysis in progress..."]
-            )
-            if risks_result
+        }
+    elif section_name == "risks":
+        return {
+            "hidden_risks": result.get("hidden_risks", ["Analysis in progress..."])
+            if result
             else ["Analysis in progress..."],
-        },
-        "questions": {
-            "questions": questions_result.get("questions", ["Analysis in progress..."])
-            if questions_result
+        }
+    elif section_name == "questions":
+        return {
+            "questions": result.get("questions", ["Analysis in progress..."])
+            if result
             else ["Analysis in progress..."],
-        },
-    }
+        }
+    else:
+        return {}

@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from app.routers import analyze, user, analyze_streaming, websocket
 from app.middleware.rate_limit import rate_limit_middleware
 from app.middleware.validation import validate_request_middleware
@@ -21,6 +22,9 @@ app = FastAPI(
     docs_url="/docs" if settings.is_development else None,
     redoc_url="/redoc" if settings.is_development else None,
 )
+
+# Add compression middleware for faster responses
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Production security middleware
 if settings.is_production:
