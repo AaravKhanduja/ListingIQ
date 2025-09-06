@@ -63,7 +63,7 @@ export default function HomePage() {
   return (
     <LandingLayout>
       <Navigation />
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
+      <div className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-8 py-6 sm:py-8 lg:py-12 space-y-8 sm:space-y-12 lg:space-y-16">
         <HeroSection
           propertyInput={propertyInput}
           setPropertyInput={setPropertyInput}
