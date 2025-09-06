@@ -1,0 +1,80 @@
+[
+  {
+    "id": "local_1",
+    "property_address": "123 Main St, San Francisco, CA",
+    "property_title": "Beautiful 3BR House",
+    "price": null,
+    "overall_score": 70,
+    "score_breakdown": null,
+    "summary": "Property analysis based on provided information. AI analysis was unavailable.",
+    "executive_summary": null,
+    "disclaimer": "This report is generated from the information you provided and is for educational/informational purposes only. It is not real estate, investment, or financial advice. Please consult licensed professionals before making decisions.",
+    "manual_data": {
+      "listing_description": "Charming single-family home in desirable neighborhood. Features updated kitchen, hardwood floors, and large backyard. Close to schools and shopping.",
+      "property_type": "Single Family Home",
+      "bedrooms": 3,
+      "bathrooms": 2,
+      "square_feet": 1800,
+      "year_built": 1995,
+      "lot_size": null,
+      "price": "$850,000",
+      "location_details": null,
+      "additional_notes": null
+    },
+    "market_analysis": {
+      "trends": "Analysis based on provided property information only",
+      "comparables": "No comparable market data available",
+      "appreciation_potential": "Market analysis requires additional research"
+    },
+    "investment_potential": {
+      "rental_income": "Requires market research and property condition assessment",
+      "cash_flow": "Based on provided property details only",
+      "roi_projections": "Market analysis needed for accurate projections",
+      "appreciation_timeline": "Requires local market research"
+    },
+    "risk_assessment": {
+      "market_risks": [
+        "Market conditions require local research"
+      ],
+      "property_risks": [
+        "Property condition unknown",
+        "Additional research recommended"
+      ],
+      "mitigation_strategies": [
+        "Conduct thorough due diligence and inspections"
+      ]
+    },
+    "renovation_analysis": {
+      "estimated_costs": "Property condition assessment needed",
+      "priority_improvements": [
+        "Based on property details provided"
+      ],
+      "renovation_roi": "Requires local market analysis"
+    },
+    "investment_recommendation": {
+      "recommendation": "Research",
+      "ideal_buyer": "Based on property characteristics",
+      "timeline": "Requires market research"
+    },
+    "strengths": [
+      "Property analysis completed"
+    ],
+    "weaknesses": [
+      "Areas requiring additional research"
+    ],
+    "hidden_issues": [
+      "Property condition unknown",
+      "Additional research recommended"
+    ],
+    "questions": [
+      "What is the current property condition?",
+      "Are there any recent renovations?",
+      "What is the rental history?",
+      "What are the local market conditions?",
+      "What comparable properties have sold recently?"
+    ],
+    "created_at": "2025-09-06 18:16:28.725493",
+    "updated_at": "2025-09-06 18:16:28.725497",
+    "generated_at": "2025-09-06T14:16:28.724879"
+  }
+]
