@@ -2,6 +2,45 @@
 
 import { ManualPropertyData } from './analyze';
 
+// Helper function to check if token is expired
+function isTokenExpired(token: string, minutes = 5): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const remainingMs = payload.exp * 1000 - Date.now();
+    return remainingMs < minutes * 60 * 1000;
+  } catch {
+    return true; // If we can't parse, assume expired
+  }
+}
+
+// Helper function to refresh token if needed
+async function ensureValidToken(userToken: string): Promise<string> {
+  // If it's a dev token, return as-is
+  if (userToken === 'dev-token') {
+    return userToken;
+  }
+
+  // Check if token is expired or expiring soon
+  if (isTokenExpired(userToken, 5)) {
+    try {
+      const { refreshUser, getSession } = await import('@/lib/supabase/auth');
+      const { error } = await refreshUser();
+      if (!error) {
+        const newSession = await getSession();
+        const newToken = newSession?.access_token;
+        if (newToken && !isTokenExpired(newToken, 0)) {
+          console.log('Token refreshed successfully');
+          return newToken;
+        }
+      }
+    } catch (error) {
+      console.warn('Token refresh failed:', error);
+    }
+  }
+
+  return userToken;
+}
+
 export interface StreamingAnalysisSection {
   type: 'analysis_started' | 'section_complete' | 'analysis_complete' | 'error';
   analysis_id?: string;
@@ -46,6 +85,9 @@ export class StreamingAnalysisClient {
       throw new Error('Authentication token required');
     }
 
+    // Ensure we have a valid token before starting
+    const validToken = await ensureValidToken(userToken);
+
     const requestBody = {
       property_address: propertyAddress,
       property_title: propertyTitle,
@@ -73,7 +115,7 @@ export class StreamingAnalysisClient {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userToken}`,
+          'Authorization': `Bearer ${validToken}`,
         },
         body: JSON.stringify(requestBody),
       });

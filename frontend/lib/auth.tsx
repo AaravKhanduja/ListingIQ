@@ -63,16 +63,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
         checkSession();
 
-        // Set up auth state change listener
+        // Set up auth state change listener and proactive token refresh
         const init = async () => {
           try {
-            const { getCurrentUser, onAuthStateChange } = await import('@/lib/supabase/auth');
+            const { getCurrentUser, onAuthStateChange, getSession, refreshUser } = await import(
+              '@/lib/supabase/auth'
+            );
             const current = await getCurrentUser();
             if (current) setUser(current);
 
+            // Set up proactive token refresh every 45 minutes (tokens typically expire in 1 hour)
+            const refreshInterval = setInterval(
+              async () => {
+                try {
+                  const session = await getSession();
+                  if (session?.access_token) {
+                    // Check if token expires in next 15 minutes
+                    const payload = JSON.parse(atob(session.access_token.split('.')[1]));
+                    const remainingMs = payload.exp * 1000 - Date.now();
+                    if (remainingMs < 15 * 60 * 1000) {
+                      // 15 minutes
+                      console.log('Proactively refreshing token...');
+                      await refreshUser();
+                    }
+                  }
+                } catch (error) {
+                  console.warn('Proactive token refresh failed:', error);
+                }
+              },
+              45 * 60 * 1000
+            ); // Check every 45 minutes
+
             const { data } = onAuthStateChange((u) => setUser(u));
+
             // Return cleanup function
-            return () => data?.subscription?.unsubscribe();
+            return () => {
+              clearInterval(refreshInterval);
+              data?.subscription?.unsubscribe();
+            };
           } catch {
             return null;
           }
