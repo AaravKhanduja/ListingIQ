@@ -263,12 +263,14 @@ function StreamingLoadingState({ streamingState }: { streamingState: StreamingAn
         )}
 
         {/* Show skeleton for remaining sections */}
-        {completedSections.length < 5 && (
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Generating Analysis...</h3>
-            <AnalysisSkeletonLoader />
-          </div>
-        )}
+        <div className="mb-8">
+          <h3 className="text-xl font-semibold text-gray-900 mb-4">
+            {completedSections.length === 0
+              ? 'Generating Analysis...'
+              : 'Generating remaining sections...'}
+          </h3>
+          <AnalysisSkeletonLoader />
+        </div>
       </main>
     </div>
   );

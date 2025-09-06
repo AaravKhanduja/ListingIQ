@@ -125,8 +125,10 @@ export class StreamingAnalysisClient {
   }
 
   private handleStreamEvent(data: StreamingAnalysisSection) {
+    console.log('Stream event received:', data);
     switch (data.type) {
       case 'analysis_started':
+        console.log('Analysis started with ID:', data.analysis_id);
         this.onUpdate(prev => ({
           ...prev,
           analysisId: data.analysis_id || null,
@@ -134,6 +136,7 @@ export class StreamingAnalysisClient {
         break;
 
       case 'section_complete':
+        console.log('Section completed:', data.section, data.data);
         if (data.section && data.data) {
           // Batch updates to reduce re-renders
           this.onUpdate(prev => {

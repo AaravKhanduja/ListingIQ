@@ -35,6 +35,7 @@ async def analyze_property_streaming(
         try:
             # Send initial response with analysis ID
             analysis_id = f"analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{request.user_id[:8]}"
+            print(f"🚀 Starting analysis {analysis_id} for {request.property_address}")
 
             yield f"data: {json.dumps({'type': 'analysis_started', 'analysis_id': analysis_id})}\n\n"
 
@@ -52,6 +53,7 @@ async def analyze_property_streaming(
                 llm_service=llm_service,
                 analysis_id=analysis_id,
             ):
+                print(f"✅ Section {section_name} completed")
                 yield f"data: {json.dumps({'type': 'section_complete', 'section': section_name, 'data': section_data})}\n\n"
 
             # Send completion signal
@@ -88,7 +90,7 @@ async def generate_progressive_analysis_stream(
     # Get optimized prompts
     prompts = OptimizedPrompts.get_all_prompts(address, manual_data)
 
-    # Create tasks for parallel execution
+    # Create tasks for parallel execution with proper mapping
     tasks = {
         "summary": llm_service.generate_analysis(prompts["summary"]),
         "strengths": llm_service.generate_analysis(prompts["strengths"]),
@@ -100,34 +102,34 @@ async def generate_progressive_analysis_stream(
     # Track which sections have been yielded
     yielded_sections = set()
 
+    # Create a mapping from coroutine to section name
+    coro_to_section = {coro: name for name, coro in tasks.items()}
+
     # Use asyncio.as_completed to get results as they finish
     for coro in asyncio.as_completed(tasks.values()):
         try:
             result = await coro
+            section_name = coro_to_section[coro]
 
-            # Find which section this result belongs to
-            for section_name, task_coro in tasks.items():
-                if task_coro.done() and section_name not in yielded_sections:
-                    yielded_sections.add(section_name)
+            if section_name not in yielded_sections:
+                yielded_sections.add(section_name)
 
-                    # Format the section data
-                    section_data = format_section_data(section_name, result)
-                    yield section_name, section_data
+                # Format the section data
+                section_data = format_section_data(section_name, result)
+                yield section_name, section_data
 
-                    # Add a small delay to create gradual progress effect
-                    if len(yielded_sections) < len(tasks):
-                        await asyncio.sleep(0.4)  # 400ms delay between completions
-                    break
+                # Add a small delay to create gradual progress effect
+                if len(yielded_sections) < len(tasks):
+                    await asyncio.sleep(0.4)  # 400ms delay between completions
 
         except Exception as e:
             print(f"❌ Error in analysis section: {e}")
             # Find which section failed and yield error
-            for section_name, task_coro in tasks.items():
-                if task_coro.done() and section_name not in yielded_sections:
-                    yielded_sections.add(section_name)
-                    section_data = format_section_data(section_name, None)
-                    yield section_name, section_data
-                    break
+            section_name = coro_to_section[coro]
+            if section_name not in yielded_sections:
+                yielded_sections.add(section_name)
+                section_data = format_section_data(section_name, None)
+                yield section_name, section_data
 
 
 def format_section_data(
