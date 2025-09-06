@@ -54,11 +54,9 @@ export function SaveButton({ listingData, propertyInput }: SaveButtonProps) {
         const result = await getSavedAnalyses(user.id);
         if (result.success && result.data) {
           const analysisToDelete = result.data.find(
-            (analysis) =>
-              (analysis as { propertyInput: string; title: string }).propertyInput ===
-                propertyInput &&
-              (analysis as { propertyInput: string; title: string }).title ===
-                listingData.propertyTitle
+            (analysis: { propertyInput: string; title: string; id: string }) =>
+              analysis.propertyInput === propertyInput &&
+              analysis.title === listingData.propertyTitle
           );
 
           if (analysisToDelete) {
