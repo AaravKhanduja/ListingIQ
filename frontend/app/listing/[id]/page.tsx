@@ -6,7 +6,6 @@ import Link from 'next/link';
 
 import { Navigation } from '@/components/layout/Navigation';
 import { ActionButtons } from '@/components/listing/ActionButtons';
-import { LoadingState } from '@/components/listing/LoadingState';
 import { SaveButton } from '@/components/listing/SaveButton';
 import { AnalysisSkeletonLoader } from '@/components/listing/SkeletonLoader';
 
@@ -84,7 +83,12 @@ function StreamingLoadingState({ streamingState }: { streamingState: StreamingAn
   if (streamingState.hiddenRisks.length > 0) completedSections.push('Hidden Risks');
   if (streamingState.questions.length > 0) completedSections.push('Questions');
 
-  const progress = (completedSections.length / 5) * 100;
+  // Calculate progress with more granular steps
+  const totalSections = 5;
+  const baseProgress = (completedSections.length / totalSections) * 100;
+
+  // Add some progress even when no sections are complete (shows we're working)
+  const progress = streamingState.analysisId ? Math.max(baseProgress, 10) : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
@@ -114,16 +118,37 @@ function StreamingLoadingState({ streamingState }: { streamingState: StreamingAn
             <h3 className="text-lg font-semibold text-gray-900">Analysis Progress</h3>
             <span className="text-sm text-gray-600">{Math.round(progress)}% complete</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+          <div className="w-full bg-gray-200 rounded-full h-3 mb-4 relative overflow-hidden">
             <div
-              className="bg-blue-600 h-2 rounded-full transition-all duration-500 ease-out"
+              className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-700 ease-out relative"
               style={{ width: `${progress}%` }}
-            />
+            >
+              {/* Animated shimmer effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse" />
+            </div>
+            {/* Progress dots for each section */}
+            <div className="absolute inset-0 flex justify-between items-center px-1">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    i < completedSections.length
+                      ? 'bg-blue-600 scale-125'
+                      : i < Math.ceil(progress / 20)
+                        ? 'bg-blue-300 scale-110'
+                        : 'bg-gray-300'
+                  }`}
+                />
+              ))}
+            </div>
           </div>
           {completedSections.length > 0 && (
             <div className="text-sm text-gray-600">
               <span className="font-medium">Completed:</span> {completedSections.join(', ')}
             </div>
+          )}
+          {completedSections.length === 0 && streamingState.analysisId && (
+            <div className="text-sm text-gray-500 italic">Initializing analysis...</div>
           )}
         </div>
 
