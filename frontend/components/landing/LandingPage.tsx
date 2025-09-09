@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -60,7 +61,6 @@ const fadeInUp = {
   transition: { duration: 0.6, ease: 'easeOut' },
 };
 
-
 const staggerContainer = {
   animate: {
     transition: {
@@ -76,6 +76,20 @@ const scaleIn = {
 };
 
 export function LandingPage() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const handleMouseEnter = () => {
+    if (videoRef.current) {
+      videoRef.current.play();
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+  };
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -105,10 +119,10 @@ export function LandingPage() {
               variants={fadeInUp}
             >
               AI-Powered Property Insights for
-                <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
-                  {' '}
-                  First-Time Buyers
-                </span>
+              <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
+                {' '}
+                First-Time Buyers
+              </span>
             </motion.h1>
 
             <motion.p
@@ -127,7 +141,7 @@ export function LandingPage() {
             </motion.p>
 
             <motion.div
-              className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center"
+              className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center"
               variants={fadeInUp}
             >
               <Link href="/auth/signup">
@@ -153,6 +167,55 @@ export function LandingPage() {
                 </motion.div>
               </Link>
             </motion.div>
+
+            {/* Video Demo Section */}
+            <div className="max-w-4xl mx-auto mt-16 mb-16">
+              <motion.div
+                className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 border border-white/20 shadow-xl rounded-lg"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+                }}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 1.0 }}
+                whileHover={{
+                  scale: 1.02,
+                  boxShadow: '0 12px 40px 0 rgba(31, 38, 135, 0.5)',
+                }}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+              >
+                <div className="aspect-video overflow-hidden relative">
+                  {/* Video Element */}
+                  <video
+                    ref={videoRef}
+                    className="w-full h-full object-cover pointer-events-none"
+                    muted
+                    loop
+                    preload="metadata"
+                    poster="/ListingIQ_poster.jpg"
+                    style={{
+                      transform: 'scale(1.1)',
+                      objectPosition: 'center center',
+                    }}
+                  >
+                    <source src="/ListingIQ_demo.mp4" type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+              </motion.div>
+
+              {/* Video Description */}
+              <div className="text-center mt-6">
+                <p className="text-gray-600">
+                  <strong>Demo Video:</strong> Transforms a property listing into comprehensive
+                  insights in under 10 seconds.
+                </p>
+              </div>
+            </div>
           </motion.div>
         </div>
       </section>

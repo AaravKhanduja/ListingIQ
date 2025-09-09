@@ -2,6 +2,7 @@
 
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 
 interface ModelInfo {
   provider: 'openai' | 'ollama';
@@ -12,6 +13,10 @@ interface ModelInfo {
 export function ModelBadge() {
   const [modelInfo, setModelInfo] = useState<ModelInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const pathname = usePathname();
+
+  // Only show on app pages (not landing page or auth pages)
+  const shouldShow = pathname && !pathname.startsWith('/auth') && pathname !== '/';
 
   useEffect(() => {
     const fetchModelInfo = async () => {
@@ -37,7 +42,7 @@ export function ModelBadge() {
     fetchModelInfo();
   }, []);
 
-  if (isLoading || !modelInfo) {
+  if (isLoading || !modelInfo || !shouldShow) {
     return null;
   }
 
@@ -52,30 +57,13 @@ export function ModelBadge() {
     }
   };
 
-  const getEnvironmentColor = (environment: string) => {
-    switch (environment) {
-      case 'development':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'production':
-        return 'bg-red-100 text-red-800 border-red-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+    <div className="fixed bottom-4 right-4 z-50">
       <Badge
         variant="outline"
         className={`text-xs font-medium ${getProviderColor(modelInfo.provider)}`}
       >
         {modelInfo.provider.toUpperCase()}: {modelInfo.model}
-      </Badge>
-      <Badge
-        variant="outline"
-        className={`text-xs font-medium ${getEnvironmentColor(modelInfo.environment)}`}
-      >
-        {modelInfo.environment.toUpperCase()}
       </Badge>
     </div>
   );
