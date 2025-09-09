@@ -15,16 +15,32 @@ export function Navigation() {
     <header className="border-b border-blue-100 bg-white/90 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-14 sm:h-16">
-          <Link
-            href="/"
-            className="flex items-center space-x-2 sm:space-x-3 hover:opacity-80 transition-opacity"
+          <button
+            onClick={() => window.location.reload()}
+            className="flex items-center space-x-2 sm:space-x-3 hover:opacity-80 transition-opacity cursor-pointer"
           >
             <div className="w-8 h-8 sm:w-9 sm:h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-sm">
               <Home className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
             <span className="text-lg sm:text-xl font-bold text-black">ListingIQ</span>
-          </Link>
+          </button>
           <nav className="flex items-center space-x-2 sm:space-x-3">
+            {/* Legal Links - Always visible */}
+            <div className="hidden sm:flex items-center space-x-4 mr-4">
+              <Link
+                href="/terms"
+                className="text-xs text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                Terms
+              </Link>
+              <Link
+                href="/privacy"
+                className="text-xs text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                Privacy
+              </Link>
+            </div>
+
             {user && (
               <>
                 <Link href="/saved">
@@ -54,15 +70,25 @@ export function Navigation() {
               </>
             )}
             {!user && (
-              <Link href="/auth/signin">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="bg-blue-600 text-white border-blue-600 hover:bg-blue-700 text-xs sm:text-sm px-3 sm:px-4"
-                >
-                  Sign In
-                </Button>
-              </Link>
+              <>
+                <Link href="/auth/signin">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-blue-600 border-blue-200 hover:bg-blue-50 text-xs sm:text-sm px-3 sm:px-4"
+                  >
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/auth/signup">
+                  <Button
+                    size="sm"
+                    className="bg-blue-600 text-white border-blue-600 hover:bg-blue-700 text-xs sm:text-sm px-3 sm:px-4"
+                  >
+                    Get Started
+                  </Button>
+                </Link>
+              </>
             )}
           </nav>
         </div>

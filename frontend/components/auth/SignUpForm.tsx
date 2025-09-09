@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -141,13 +142,19 @@ export function SignUpForm() {
             <input type="checkbox" className="mt-1 rounded border-slate-300" required />
             <span className="text-sm text-slate-600">
               I agree to the{' '}
-              <button type="button" className="text-blue-600 hover:text-blue-700 font-medium">
+              <Link
+                href="/terms"
+                className="text-blue-600 hover:text-blue-700 font-medium underline"
+              >
                 Terms of Service
-              </button>{' '}
+              </Link>{' '}
               and{' '}
-              <button type="button" className="text-blue-600 hover:text-blue-700 font-medium">
+              <Link
+                href="/privacy"
+                className="text-blue-600 hover:text-blue-700 font-medium underline"
+              >
                 Privacy Policy
-              </button>
+              </Link>
             </span>
           </div>
 

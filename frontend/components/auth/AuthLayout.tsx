@@ -25,12 +25,28 @@ export function AuthLayout({ children }: AuthLayoutProps) {
               </div>
               <span className="text-xl font-bold text-black">ListingIQ</span>
             </Link>
-            <Link href="/">
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Home
-              </Button>
-            </Link>
+            <div className="flex items-center space-x-4">
+              <div className="hidden sm:flex items-center space-x-4">
+                <Link
+                  href="/terms"
+                  className="text-xs text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  Terms
+                </Link>
+                <Link
+                  href="/privacy"
+                  className="text-xs text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  Privacy
+                </Link>
+              </div>
+              <Link href="/">
+                <Button variant="outline" size="sm">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Home
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </header>
