@@ -248,8 +248,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Development mode: clear localStorage
       localStorage.removeItem('dev-user');
       setUser(null);
-      // Redirect to signin page
-      window.location.href = '/auth/signin';
+      // Redirect to landing page
+      window.location.href = '/';
       return;
     }
 
@@ -277,16 +277,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await new Promise((resolve) => setTimeout(resolve, 200));
 
         // Force a full page reload to clear any residual state
-        window.location.href = '/auth/signin';
+        window.location.href = '/';
       } catch {
         // Clear user state even if signout fails
         setUser(null);
         // Force a full page reload to clear any residual state
-        window.location.href = '/auth/signin';
+        window.location.href = '/';
       }
     } else {
-      // No Supabase configured, redirect to signin page
-      window.location.href = '/auth/signin';
+      // No Supabase configured, redirect to landing page
+      window.location.href = '/';
     }
   }, [isDevMode]);
 
@@ -299,7 +299,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Development mode: clear localStorage and redirect
       localStorage.removeItem('dev-user');
       setUser(null);
-      window.location.href = '/auth/signin';
+      window.location.href = '/';
       return { success: true };
     }
 
@@ -325,7 +325,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await new Promise((resolve) => setTimeout(resolve, 200));
 
           // Force a full page reload to clear any residual state
-          window.location.href = '/auth/signin';
+          window.location.href = '/';
           return result;
         }
 

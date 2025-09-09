@@ -48,8 +48,8 @@ export function ProfileOverlay({ isOpen, onClose }: ProfileOverlayProps) {
     try {
       await signOut();
     } catch {
-      // Even if signout fails, try to redirect
-      window.location.href = '/auth/signin';
+      // Even if signout fails, try to redirect to landing page
+      window.location.href = '/';
     } finally {
       setIsSigningOut(false);
     }
